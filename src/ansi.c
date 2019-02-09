@@ -85,8 +85,8 @@ void ansi_ibmchar(unsigned char c, unsigned char attr)
 	}
 
 	if(attr != cur_attr) {
-		unsigned char fg = cmap[attr & 7];
-		unsigned char bg = cmap[(attr >> 4) & 7];
+		unsigned char bg = cmap[attr & 7];
+		unsigned char fg = cmap[(attr >> 4) & 7];
 
 		ptr += sprintf(ptr, "\033[;%d;%dm", fg + 30, bg + 40);
 		cur_attr = attr;
