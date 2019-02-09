@@ -1,4 +1,5 @@
 #include <stdio.h>
+#include <string.h>
 #include <inttypes.h>
 #include "game.h"
 #include "pieces.h"
@@ -46,7 +47,10 @@ int init_game(void)
 	int i, j;
 	uint16_t *row = scr;
 
+	tick_interval = 1000;
+
 	ansi_clearscr();
+	ansi_cursor(0);
 
 	/* fill the screen buffer, and draw */
 	for(i=0; i<SCR_ROWS; i++) {
@@ -77,13 +81,53 @@ void cleanup_game(void)
 	ansi_reset();
 }
 
-void proc_input(void)
-{
-	int c = fgetc(stdin);
+static int pos[2] = {0, PF_COLS / 2};
+static int next_pos[2] = {0, PF_COLS / 2};
 
+long update(long msec)
+{
+	static long prev_tick;
+	long dt;
+
+	dt = msec - prev_tick;
+
+	/* fall */
+	while(dt >= tick_interval) {
+		next_pos[0] = (pos[0] + 1) % PF_ROWS;
+		dt -= tick_interval;
+		prev_tick = msec;
+	}
+
+	if(memcmp(pos, next_pos, sizeof pos) != 0) {
+		ansi_setcursor(pos[0], (PF_XOFFS + pos[1]) * 2);
+		wrchar(CHAR(' ', BLACK, WHITE));
+
+		memcpy(pos, next_pos, sizeof pos);
+		ansi_setcursor(pos[0], (PF_XOFFS + pos[1]) * 2);
+		wrchar(CHAR(' ', RED, RED));
+
+		fflush(stdout);
+	}
+	return tick_interval - dt;
+}
+
+void game_input(int c)
+{
 	switch(c) {
 	case 27:
 		quit = 1;
+		break;
+
+	case 'a':
+		if(pos[1] > 0) {
+			next_pos[1] = pos[1] - 1;
+		}
+		break;
+
+	case 'd':
+		if(pos[1] < PF_COLS - 1) {
+			next_pos[1] = pos[1] + 1;
+		}
 		break;
 
 	default:

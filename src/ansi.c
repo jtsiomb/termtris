@@ -63,6 +63,12 @@ void ansi_setcursor(int row, int col)
 	printf("\033[%d;%dH", row + 1, col + 1);
 }
 
+void ansi_cursor(int show)
+{
+	printf("\033[?25%c", show ? 'h' : 'l');
+	fflush(stdout);
+}
+
 void ansi_ibmchar(unsigned char c, unsigned char attr)
 {
 	char cmd[32];

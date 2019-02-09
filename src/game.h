@@ -2,10 +2,12 @@
 #define GAME_H_
 
 int quit;
+long tick_interval;
 
 int init_game(void);
 void cleanup_game(void);
 
-void proc_input(void);
+long update(long msec);
+void game_input(int c);
 
 #endif	/* GAME_H_ */
