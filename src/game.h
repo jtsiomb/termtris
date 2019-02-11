@@ -3,6 +3,7 @@
 
 int quit;
 long tick_interval;
+int use_bell;
 
 int init_game(void);
 void cleanup_game(void);

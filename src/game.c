@@ -137,11 +137,14 @@ long update(long msec)
 				fprintf(stderr, "stick at row %d col %d\n", pos[0], pos[1]);
 				stick(cur_piece, next_pos);
 				cur_piece = -1;
+				return 0;
 			}
 		} else {
 			cur_piece = rand() % NUM_PIECES;
+			prev_rot = cur_rot = 0;
 			fprintf(stderr, "spawn: %d\n", cur_piece);
-			pos[0] = next_pos[0] = piece_spawnpos[cur_piece][0];
+			pos[0] = piece_spawnpos[cur_piece][0];
+			next_pos[0] = pos[0] + 1;
 			pos[1] = next_pos[1] = PF_COLS / 2 + piece_spawnpos[cur_piece][1];
 		}
 
@@ -158,10 +161,88 @@ long update(long msec)
 	return tick_interval - dt;
 }
 
+
+#define C0	0x9b
+#define SS3	0x8f
+
+static void runesc(int csi, char *buf)
+{
+	if(csi != C0) return;
+
+	if(buf[1] == 0) {
+		switch(buf[0]) {
+		case 'A':
+			game_input('w');	/* up */
+			break;
+		case 'B':
+			game_input('s');	/* down */
+			break;
+		case 'C':
+			game_input('d');	/* right */
+			break;
+		case 'D':
+			game_input('a');	/* left */
+			break;
+		default:
+			break;
+		}
+	}
+}
+
 void game_input(int c)
 {
+	static int esc, csi;
+	static int esctop;
+	static char escbuf[64];
+
+	if(esc) {
+		esc = 0;
+		if(c == 27) {
+			quit = 1;
+			return;
+		}
+
+		switch(c) {
+		case '[':
+			csi = C0;
+			return;
+		case 'O':
+			csi = SS3;
+			return;
+		default:
+			break;
+		}
+	}
+
+	if(csi) {
+		if(c < 0x20 || c >= 0x80) {
+			csi = 0;
+			esctop = 0;
+		}
+
+		escbuf[esctop++] = c;
+
+		if(c >= 0x40) {
+			int prevcsi = csi;
+			escbuf[esctop] = 0;
+			csi = 0;
+			esctop = 0;
+			runesc(prevcsi, escbuf);
+		}
+		return;
+	}
+
 	switch(c) {
 	case 27:
+		esc = 1;
+		break;
+
+	case C0:
+		esc = 1;
+		csi = C0;
+		break;
+
+	case 'q':
 		quit = 1;
 		break;
 
@@ -196,6 +277,7 @@ void game_input(int c)
 		break;
 
 	default:
+		fprintf(stderr, "unhandled input: %x\n", c);
 		break;
 	}
 }
@@ -228,6 +310,11 @@ static void stick(int piece, const int *pos)
 
 		scr[y * SCR_COLS + x] = piece + FIRST_PIECE_TILE;
 	}
+
+	if(use_bell) {
+		putchar('\a');
+		fflush(stdout);
+	}
 }
 
 static void draw_piece(int piece, const int *pos, int rot, int mode)
@@ -240,6 +327,8 @@ static void draw_piece(int piece, const int *pos, int rot, int mode)
 		int x = PF_XOFFS + pos[1] + BLKX(*p);
 		int y = PF_YOFFS + pos[0] + BLKY(*p);
 		p++;
+
+		if(y < 0) continue;
 
 		ansi_setcursor(y, x * 2);
 		wrtile(tile);

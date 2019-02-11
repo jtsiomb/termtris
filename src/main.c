@@ -1,4 +1,5 @@
 #include <stdio.h>
+#include <stdlib.h>
 #include <string.h>
 #include <errno.h>
 #include <unistd.h>
@@ -11,6 +12,8 @@
 
 int init(void);
 void cleanup(void);
+int parse_args(int argc, char **argv);
+void print_usage(const char *argv0);
 long get_msec(void);
 
 static const char *termfile = "/dev/tty";
@@ -23,8 +26,8 @@ int main(int argc, char **argv)
 	long msec, next;
 	struct timeval tv;
 
-	if(argc > 1) {
-		termfile = argv[1];
+	if(parse_args(argc, argv) == -1) {
+		return 1;
 	}
 
 	if(init() == -1) {
@@ -94,7 +97,7 @@ int init(void)
 	dup(fd);
 
 	umask(002);
-	open("ansitris.log", O_WRONLY | O_CREAT, 0664);
+	open("ansitris.log", O_WRONLY | O_CREAT | O_TRUNC, 0664);
 
 
 	if(init_game() == -1) {
@@ -108,6 +111,54 @@ void cleanup(void)
 {
 	cleanup_game();
 	tcsetattr(0, TCSAFLUSH, &saved_term);
+}
+
+int parse_args(int argc, char **argv)
+{
+	int i;
+
+	for(i=1; i<argc; i++) {
+		if(argv[i][0] == '-') {
+			if(argv[i][2] == 0) {
+				switch(argv[i][1]) {
+				case 't':
+					termfile = argv[++i];
+					break;
+
+				case 'b':
+					use_bell = 1;
+					break;
+
+				case 'h':
+					print_usage(argv[0]);
+					exit(0);
+
+				default:
+					fprintf(stderr, "invalid option: %s\n", argv[i]);
+					print_usage(argv[0]);
+					return -1;
+				}
+			} else {
+				fprintf(stderr, "invalid option: %s\n", argv[i]);
+				print_usage(argv[0]);
+				return -1;
+			}
+		} else {
+			fprintf(stderr, "unexpected argument: %s\n", argv[i]);
+			print_usage(argv[0]);
+			return -1;
+		}
+	}
+	return 0;
+}
+
+void print_usage(const char *argv0)
+{
+	printf("Usage: %s [options]\n", argv0);
+	printf("Options:\n");
+	printf(" -t <dev>: terminal device (default: /dev/tty)\n");
+	printf(" -b: use bell for sound ques (default: off)\n");
+	printf(" -h: print usage information and exit\n");
 }
 
 long get_msec(void)
