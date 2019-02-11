@@ -46,14 +46,19 @@ int scr[SCR_COLS * SCR_ROWS];
 
 static int collision(int piece, const int *pos);
 static void stick(int piece, const int *pos);
+static void erase_completed(void);
 static void draw_piece(int piece, const int *pos, int rot, int mode);
 static void drawbg(void);
+static void drawpf(void);
+static void draw_line(int row, int blink);
 static void wrtile(int tileid);
 
 
 static int pos[2], next_pos[2];
 static int cur_piece = -1;
 static int cur_rot, prev_rot;
+static int complines[4] = {-1, -1, -1, -1};
+static int num_complines;
 
 enum {
 	TILE_BLACK,
@@ -121,6 +126,8 @@ void cleanup_game(void)
 	ansi_reset();
 }
 
+#define BLINK_UPD_RATE	100
+
 long update(long msec)
 {
 	static long prev_tick;
@@ -128,21 +135,38 @@ long update(long msec)
 
 	dt = msec - prev_tick;
 
+	if(num_complines) {
+		/* lines where completed, we're in blinking mode */
+		int i, blink = dt >> 8;
+
+		if(blink > 6) {
+			erase_completed();
+			num_complines = 0;
+			return 0;
+		}
+
+		for(i=0; i<num_complines; i++) {
+			draw_line(complines[i], blink & 1);
+		}
+		fflush(stdout);
+		return BLINK_UPD_RATE;
+	}
+
+
 	/* fall */
 	while(dt >= tick_interval) {
 		if(cur_piece >= 0) {
 			next_pos[0] = pos[0] + 1;
 			if(collision(cur_piece, next_pos)) {
 				next_pos[0] = pos[0];
-				fprintf(stderr, "stick at row %d col %d\n", pos[0], pos[1]);
 				stick(cur_piece, next_pos);
 				cur_piece = -1;
 				return 0;
 			}
 		} else {
+			/* respawn */
 			cur_piece = rand() % NUM_PIECES;
 			prev_rot = cur_rot = 0;
-			fprintf(stderr, "spawn: %d\n", cur_piece);
 			pos[0] = piece_spawnpos[cur_piece][0];
 			next_pos[0] = pos[0] + 1;
 			pos[1] = next_pos[1] = PF_COLS / 2 + piece_spawnpos[cur_piece][1];
@@ -158,6 +182,7 @@ long update(long msec)
 		memcpy(pos, next_pos, sizeof pos);
 		prev_rot = cur_rot;
 	}
+
 	return tick_interval - dt;
 }
 
@@ -292,6 +317,8 @@ static int collision(int piece, const int *pos)
 		int y = PF_YOFFS + pos[0] + BLKY(*p);
 		p++;
 
+		if(y < 0) continue;
+
 		if(scr[y * SCR_COLS + x] != TILE_PF) return 1;
 	}
 
@@ -300,21 +327,75 @@ static int collision(int piece, const int *pos)
 
 static void stick(int piece, const int *pos)
 {
-	int i;
+	int i, j, nblank;
+	int *pfline;
 	unsigned char *p = pieces[piece][cur_rot];
 
 	for(i=0; i<4; i++) {
-		int x = PF_XOFFS + pos[1] + BLKX(*p);
-		int y = PF_YOFFS + pos[0] + BLKY(*p);
+		int x = pos[1] + BLKX(*p);
+		int y = pos[0] + BLKY(*p);
 		p++;
 
-		scr[y * SCR_COLS + x] = piece + FIRST_PIECE_TILE;
+		pfline = scr + (y + PF_YOFFS) * SCR_COLS + PF_XOFFS;
+		pfline[x] = piece + FIRST_PIECE_TILE;
+
+		nblank = 0;
+		for(j=0; j<PF_COLS; j++) {
+			if(pfline[j] == TILE_PF) {
+				nblank++;
+			}
+		}
+
+		if(nblank == 0) {
+			complines[num_complines++] = y;
+		}
 	}
 
 	if(use_bell) {
 		putchar('\a');
 		fflush(stdout);
 	}
+}
+
+static void erase_completed(void)
+{
+	int i, j, srow, drow;
+	int *pfstart = scr + PF_YOFFS * SCR_COLS + PF_XOFFS;
+
+	/* sort completed lines from highest to lowest row number */
+	for(i=0; i<num_complines-1; i++) {
+		for(j=i+1; j<num_complines; j++) {
+			if(complines[j] > complines[i]) {
+				int tmp = complines[j];
+				complines[j] = complines[i];
+				complines[i] = tmp;
+			}
+		}
+	}
+
+	srow = drow = PF_ROWS - 1;
+
+	for(i=0; i<PF_ROWS; i++) {
+		for(j=0; j<num_complines; j++) {
+			if(complines[j] == srow) {
+				srow--;
+			}
+		}
+
+		if(srow < 0) break;
+
+		if(srow != drow) {
+			int *sptr = pfstart + srow * SCR_COLS;
+			int *dptr = pfstart + drow * SCR_COLS;
+			memcpy(dptr, sptr, PF_COLS * sizeof *dptr);
+		}
+
+		srow--;
+		drow--;
+	}
+
+	drawpf();
+	fflush(stdout);
 }
 
 static void draw_piece(int piece, const int *pos, int rot, int mode)
@@ -345,6 +426,39 @@ static void drawbg(void)
 		ansi_setcursor(i, 0);
 		for(j=0; j<SCR_COLS; j++) {
 			wrtile(*sptr++);
+		}
+	}
+}
+
+static void drawpf(void)
+{
+	int i, j;
+	int *sptr = scr + PF_YOFFS * SCR_COLS + PF_XOFFS;
+
+	for(i=0; i<PF_ROWS; i++) {
+		ansi_setcursor(i, PF_XOFFS * 2);
+		for(j=0; j<PF_COLS; j++) {
+			wrtile(sptr[j]);
+		}
+		sptr += SCR_COLS;
+	}
+}
+
+static void draw_line(int row, int blink)
+{
+	int i;
+
+	ansi_setcursor(row, PF_XOFFS * 2);
+
+	if(blink) {
+		int *sptr = scr + (row + PF_YOFFS) * SCR_COLS + PF_XOFFS;
+
+		for(i=0; i<PF_COLS; i++) {
+			wrtile(*sptr++);
+		}
+	} else {
+		for(i=0; i<PF_COLS; i++) {
+			wrtile(TILE_PF);
 		}
 	}
 }
