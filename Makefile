@@ -1,7 +1,7 @@
 src = $(wildcard src/*.c)
 obj = $(src:.c=.o)
 dep = $(obj:.o=.d)
-bin = ansitris
+bin = termtris
 
 CFLAGS = -pedantic -Wall -g
 
