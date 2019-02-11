@@ -61,6 +61,7 @@ enum { BLACK, BLUE, GREEN, CYAN, RED, MAGENTA, YELLOW, WHITE };
 
 int scr[SCR_COLS * SCR_ROWS];
 
+static int spawn(void);
 static int collision(int piece, const int *pos);
 static void stick(int piece, const int *pos);
 static void erase_completed(void);
@@ -76,11 +77,13 @@ static int cur_piece = -1;
 static int cur_rot, prev_rot;
 static int complines[4] = {-1, -1, -1, -1};
 static int num_complines;
+static int gameover;
 
 enum {
 	TILE_BLACK,
 	TILE_PF,
 	TILE_PFSEP,
+	TILE_GAMEOVER,
 	TILE_IPIECE,
 	TILE_OPIECE,
 	TILE_JPIECE,
@@ -95,6 +98,7 @@ static uint16_t tiles[][2] = {
 	{ CHAR(' ', BLACK, BLACK), CHAR(' ', BLACK, BLACK) },			/* black tile */
 	{ CHAR(' ', WHITE, WHITE), CHAR(' ', WHITE, WHITE) },			/* playfield background */
 	{ CHAR(G_CHECKER, WHITE, BLACK), CHAR(G_CHECKER, WHITE, BLACK) },	/* well separator */
+	{ CHAR(G_CROSS, RED, BLACK), CHAR(G_CROSS, RED, BLACK) },		/* gameover fill */
 	{ CHAR(' ', CYAN, CYAN), CHAR(' ', CYAN, CYAN) },				/* straight */
 	{ CHAR(' ', BLUE, BLUE), CHAR(' ', BLUE, BLUE) },				/* box */
 	{ CHAR(' ', GREEN, GREEN), CHAR(' ', GREEN, GREEN) },			/* J */
@@ -144,6 +148,7 @@ void cleanup_game(void)
 }
 
 #define BLINK_UPD_RATE	100
+#define GAMEOVER_FILL_RATE	50
 
 long update(long msec)
 {
@@ -151,6 +156,25 @@ long update(long msec)
 	long dt;
 
 	dt = msec - prev_tick;
+
+	if(gameover) {
+		int i, row = PF_ROWS - gameover;
+		int *ptr;
+
+		if(row >= 0) {
+			ptr = scr + (row + PF_YOFFS) * SCR_COLS + PF_XOFFS;
+			for(i=0; i<PF_COLS; i++) {
+				*ptr++ = TILE_GAMEOVER;
+			}
+			draw_line(row, 1);
+			fflush(stdout);
+
+			gameover++;
+			return GAMEOVER_FILL_RATE;
+		}
+
+		return 0xffffffff;
+	}
 
 	if(num_complines) {
 		/* lines where completed, we're in blinking mode */
@@ -182,11 +206,10 @@ long update(long msec)
 			}
 		} else {
 			/* respawn */
-			cur_piece = rand() % NUM_PIECES;
-			prev_rot = cur_rot = 0;
-			pos[0] = piece_spawnpos[cur_piece][0];
-			next_pos[0] = pos[0] + 1;
-			pos[1] = next_pos[1] = PF_COLS / 2 + piece_spawnpos[cur_piece][1];
+			if(spawn() == -1) {
+				gameover = 1;
+				return 0;
+			}
 		}
 
 		dt -= tick_interval;
@@ -322,6 +345,20 @@ void game_input(int c)
 		fprintf(stderr, "unhandled input: %x\n", c);
 		break;
 	}
+}
+
+static int spawn(void)
+{
+	cur_piece = rand() % NUM_PIECES;
+	prev_rot = cur_rot = 0;
+	pos[0] = piece_spawnpos[cur_piece][0];
+	next_pos[0] = pos[0] + 1;
+	pos[1] = next_pos[1] = PF_COLS / 2 + piece_spawnpos[cur_piece][1];
+
+	if(collision(cur_piece, next_pos)) {
+		return -1;
+	}
+	return 0;
 }
 
 static int collision(int piece, const int *pos)
