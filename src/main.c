@@ -63,9 +63,10 @@ static void update_joystick(void);
 
 int main(int argc, char **argv)
 {
-	int res, c, maxfd;
+	int i, res, maxfd;
 	long msec, next;
 	struct timeval tv;
+	static unsigned char buf[128];
 
 	if(parse_args(argc, argv) == -1) {
 		return 1;
@@ -102,8 +103,9 @@ int main(int argc, char **argv)
 
 		if(res > 0) {
 			if(FD_ISSET(0, &rdset)) {
-				while((c = fgetc(stdin)) >= 0) {
-					game_input(c);
+				int rd = read(0, buf, sizeof buf);
+				for(i=0; i<rd; i++) {
+					game_input(buf[i]);
 					if(quit) goto end;
 				}
 			}
@@ -144,7 +146,7 @@ int init(void)
 	if(!jsdevfile) jsdevfile = def_jsdevfile;
 #endif
 
-	if((fd = open(termfile, O_RDWR | O_NONBLOCK)) == -1) {
+	if((fd = open(termfile, O_RDWR)) == -1) {
 		fprintf(stderr, "failed to open terminal device: %s: %s\n", termfile, strerror(errno));
 		return -1;
 	}
@@ -159,7 +161,7 @@ int init(void)
 	term.c_lflag &= ~(ECHO | ECHONL | ICANON | ISIG | IEXTEN);
 	term.c_cflag = (term.c_cflag & ~(CSIZE | PARENB)) | CS8;
 	term.c_cc[VMIN] = 0;
-	term.c_cc[VTIME] = 0;
+	term.c_cc[VTIME] = 1;
 
 	if(tcsetattr(fd, TCSAFLUSH, &term) == -1) {
 		fprintf(stderr, "failed to change terminal attributes: %s\n", strerror(errno));
