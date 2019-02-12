@@ -27,6 +27,12 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 #include <sys/time.h>
 #include "game.h"
 
+#ifdef __linux__
+#include <sys/ioctl.h>
+#include <linux/joystick.h>
+#define USE_JOYSTICK
+#endif
+
 int init(void);
 void cleanup(void);
 int parse_args(int argc, char **argv);
@@ -37,9 +43,27 @@ static const char *termfile = "/dev/tty";
 static struct termios saved_term;
 static struct timeval tv0;
 
+
+#ifdef USE_JOYSTICK
+enum {
+	BN_LEFT		= 0x1000000,
+	BN_RIGHT	= 0x2000000,
+	BN_UP		= 0x4000000,
+	BN_DOWN		= 0x8000000
+};
+static unsigned int jstate;
+static int autorepeat;
+
+static const char *jsdevfile;
+static int jsdev = -1;
+
+static void read_joystick(void);
+static void update_joystick(void);
+#endif
+
 int main(int argc, char **argv)
 {
-	int res, c;
+	int res, c, maxfd;
 	long msec, next;
 	struct timeval tv;
 
@@ -60,15 +84,39 @@ int main(int argc, char **argv)
 		fd_set rdset;
 		FD_ZERO(&rdset);
 		FD_SET(0, &rdset);
+		maxfd = 0;
 
-		while((res = select(1, &rdset, 0, 0, &tv)) == -1 && errno == EINTR);
-
-		if(res > 0 && FD_ISSET(0, &rdset)) {
-			while((c = fgetc(stdin)) >= 0) {
-				game_input(c);
-				if(quit) goto end;
-			}
+#ifdef USE_JOYSTICK
+		if(jsdev != -1) {
+			FD_SET(jsdev, &rdset);
+			maxfd = jsdev + 1;
 		}
+
+		if(autorepeat) {
+			tv.tv_sec = autorepeat <= 2 ? 0 : 0;
+			tv.tv_usec = autorepeat <= 2 ? 500000 : 50000;
+		}
+#endif
+
+		while((res = select(maxfd + 1, &rdset, 0, 0, &tv)) == -1 && errno == EINTR);
+
+		if(res > 0) {
+			if(FD_ISSET(0, &rdset)) {
+				while((c = fgetc(stdin)) >= 0) {
+					game_input(c);
+					if(quit) goto end;
+				}
+			}
+
+#ifdef USE_JOYSTICK
+			if(FD_ISSET(jsdev, &rdset)) {
+				read_joystick();
+			}
+#endif
+		}
+#ifdef USE_JOYSTICK
+		update_joystick();
+#endif
 
 		msec = get_msec();
 		next = update(msec);
@@ -86,6 +134,15 @@ int init(void)
 {
 	int fd;
 	struct termios term;
+
+#ifdef USE_JOYSTICK
+	static const char *def_jsdevfile = "/dev/input/js0";
+	if((jsdev = open(jsdevfile ? jsdevfile : def_jsdevfile, O_RDONLY | O_NONBLOCK)) == -1 && jsdevfile) {
+		fprintf(stderr, "failed to open joystick device: %s: %s\n", jsdevfile, strerror(errno));
+		return -1;
+	}
+	if(!jsdevfile) jsdevfile = def_jsdevfile;
+#endif
 
 	if((fd = open(termfile, O_RDWR | O_NONBLOCK)) == -1) {
 		fprintf(stderr, "failed to open terminal device: %s: %s\n", termfile, strerror(errno));
@@ -116,6 +173,14 @@ int init(void)
 	umask(002);
 	open("termtris.log", O_WRONLY | O_CREAT | O_TRUNC, 0664);
 
+#ifdef USE_JOYSTICK
+	if(jsdev != -1) {
+		char name[256];
+		if(ioctl(jsdev, JSIOCGNAME(sizeof name), name) != -1) {
+			fprintf(stderr, "Using joystick %s: %s\n", jsdevfile, name);
+		}
+	}
+#endif
 
 	if(init_game() == -1) {
 		return -1;
@@ -144,6 +209,15 @@ int parse_args(int argc, char **argv)
 
 				case 'b':
 					use_bell = 1;
+					break;
+
+				case 'j':
+#ifdef USE_JOYSTICK
+					jsdevfile = argv[++i];
+#else
+					fprintf(stderr, "invalid option: %s: not built with joystick support\n", argv[i]);
+					return -1;
+#endif
 					break;
 
 				case 'h':
@@ -175,6 +249,9 @@ void print_usage(const char *argv0)
 	printf("Options:\n");
 	printf(" -t <dev>: terminal device (default: /dev/tty)\n");
 	printf(" -b: use bell for sound ques (default: off)\n");
+#ifdef USE_JOYSTICK
+	printf(" -j <dev>: use joystick device for input\n");
+#endif
 	printf(" -h: print usage information and exit\n");
 }
 
@@ -186,3 +263,69 @@ long get_msec(void)
 
 	return (tv.tv_sec - tv0.tv_sec) * 1000 + (tv.tv_usec - tv0.tv_usec) / 1000;
 }
+
+#ifdef USE_JOYSTICK
+static void read_joystick(void)
+{
+	struct js_event ev;
+	unsigned int dir;
+
+	while(read(jsdev, &ev, sizeof ev) > 0) {
+		if(ev.type & JS_EVENT_AXIS) {
+			int axis = ev.number & 1;
+			int val = abs(ev.value) < 32587 ? 0 : ev.value;
+
+			if(axis == 0) {
+				if(val) {
+					dir = val > 0 ? BN_RIGHT : BN_LEFT;
+				} else {
+					dir = BN_LEFT | BN_RIGHT;
+				}
+			} else {
+				if(val) {
+					dir = val > 0 ? BN_DOWN : BN_UP;
+				} else {
+					dir = BN_DOWN | BN_UP;
+				}
+			}
+
+			if(val) {
+				jstate |= dir;
+			} else {
+				jstate &= ~dir;
+			}
+		}
+		if(ev.type & JS_EVENT_BUTTON) {
+			if(ev.value) {
+				jstate |= 1 << ev.number;
+
+				if(ev.number >= 4) {
+					game_input('p');
+				}
+			} else {
+				jstate &= ~(1 << ev.number);
+			}
+		}
+	}
+
+	autorepeat = jstate ? 1 : 0;
+}
+
+static void update_joystick(void)
+{
+	if(jstate) autorepeat++;
+
+	if(jstate & BN_LEFT) {
+		game_input('a');
+	}
+	if(jstate & BN_RIGHT) {
+		game_input('d');
+	}
+	if(jstate & BN_DOWN) {
+		game_input('s');
+	}
+	if(jstate & 0x3) {
+		game_input('w');
+	}
+}
+#endif
