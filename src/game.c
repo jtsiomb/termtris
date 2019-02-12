@@ -83,6 +83,7 @@ static int num_complines;
 static int gameover;
 static int pause;
 static int score, level, lines;
+static int just_spawned;
 
 enum {
 	TILE_BLACK,
@@ -300,6 +301,7 @@ long update(long msec)
 	/* fall */
 	while(dt >= tick_interval) {
 		if(cur_piece >= 0) {
+			just_spawned = 0;
 			next_pos[0] = pos[0] + 1;
 			if(collision(cur_piece, next_pos)) {
 				next_pos[0] = pos[0];
@@ -469,9 +471,12 @@ void game_input(int c)
 		break;
 
 	case 's':
-		next_pos[0] = pos[0] + 1;
-		if(collision(cur_piece, next_pos)) {
-			next_pos[0] = pos[0];
+		/* ignore drops until the first update after a spawn */
+		if(!just_spawned) {
+			next_pos[0] = pos[0] + 1;
+			if(collision(cur_piece, next_pos)) {
+				next_pos[0] = pos[0];
+			}
 		}
 		break;
 
@@ -508,6 +513,8 @@ static int spawn(void)
 	if(collision(cur_piece, next_pos)) {
 		return -1;
 	}
+
+	just_spawned = 1;
 	return 0;
 }
 
