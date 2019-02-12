@@ -158,6 +158,8 @@ int init(void)
 	term.c_oflag &= ~OPOST;
 	term.c_lflag &= ~(ECHO | ECHONL | ICANON | ISIG | IEXTEN);
 	term.c_cflag = (term.c_cflag & ~(CSIZE | PARENB)) | CS8;
+	term.c_cc[VMIN] = 0;
+	term.c_cc[VTIME] = 0;
 
 	if(tcsetattr(fd, TCSAFLUSH, &term) == -1) {
 		fprintf(stderr, "failed to change terminal attributes: %s\n", strerror(errno));
