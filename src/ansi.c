@@ -86,6 +86,15 @@ void ansi_cursor(int show)
 	fflush(stdout);
 }
 
+void ansi_setcolor(int fg, int bg)
+{
+	cur_attr = (fg << 4) | bg;
+	fg = cmap[fg];
+	bg = cmap[bg];
+
+	printf("\033[;%d;%dm", fg + 30, bg + 40);
+}
+
 void ansi_ibmchar(unsigned char c, unsigned char attr)
 {
 	char cmd[32];

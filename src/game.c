@@ -20,6 +20,7 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 #include <string.h>
 #include <time.h>
 #include <inttypes.h>
+#include <assert.h>
 #include "game.h"
 #include "pieces.h"
 #include "ansi.h"
@@ -61,6 +62,8 @@ enum { BLACK, BLUE, GREEN, CYAN, RED, MAGENTA, YELLOW, WHITE };
 
 int scr[SCR_COLS * SCR_ROWS];
 
+static void addscore(int nlines);
+static void print_numbers(void);
 static int spawn(void);
 static int collision(int piece, const int *pos);
 static void stick(int piece, const int *pos);
@@ -73,11 +76,13 @@ static void wrtile(int tileid);
 
 
 static int pos[2], next_pos[2];
-static int cur_piece = -1;
+static int cur_piece = -1, next_piece = -1;
 static int cur_rot, prev_rot;
-static int complines[4] = {-1, -1, -1, -1};
+static int complines[4];
 static int num_complines;
 static int gameover;
+
+static int score, level, lines;
 
 enum {
 	TILE_BLACK,
@@ -90,7 +95,16 @@ enum {
 	TILE_LPIECE,
 	TILE_SPIECE,
 	TILE_TPIECE,
-	TILE_ZPIECE
+	TILE_ZPIECE,
+	TILE_FRM_TL,
+	TILE_FRM_TR,
+	TILE_FRM_BL,
+	TILE_FRM_BR,
+	TILE_FRM_LTEE,
+	TILE_FRM_RTEE,
+	TILE_FRM_HLINE,
+	TILE_FRM_LVLINE,
+	TILE_FRM_RVLINE
 };
 #define FIRST_PIECE_TILE	TILE_IPIECE
 
@@ -99,13 +113,46 @@ static uint16_t tiles[][2] = {
 	{ CHAR(' ', WHITE, WHITE), CHAR(' ', WHITE, WHITE) },			/* playfield background */
 	{ CHAR(G_CHECKER, WHITE, BLACK), CHAR(G_CHECKER, WHITE, BLACK) },	/* well separator */
 	{ CHAR(G_CROSS, RED, BLACK), CHAR(G_CROSS, RED, BLACK) },		/* gameover fill */
-	{ CHAR(' ', CYAN, CYAN), CHAR(' ', CYAN, CYAN) },				/* straight */
-	{ CHAR(' ', BLUE, BLUE), CHAR(' ', BLUE, BLUE) },				/* box */
-	{ CHAR(' ', GREEN, GREEN), CHAR(' ', GREEN, GREEN) },			/* J */
-	{ CHAR(' ', YELLOW, YELLOW), CHAR(' ', YELLOW, YELLOW) },		/* L */
-	{ CHAR(' ', MAGENTA, MAGENTA), CHAR(' ', MAGENTA, MAGENTA) },	/* S */
-	{ CHAR(' ', RED, BLACK), CHAR(' ', RED, BLACK) },		/* T */
-	{ CHAR(' ', RED, RED), CHAR(' ', RED, RED) },					/* Z */
+	{ CHAR('[', WHITE, YELLOW), CHAR(']', WHITE, YELLOW) },			/* L */
+	{ CHAR('[', WHITE, GREEN), CHAR(']', WHITE, GREEN) },			/* J */
+	{ CHAR('[', WHITE, CYAN), CHAR(']', WHITE, CYAN) },				/* I */
+	{ CHAR('[', WHITE, BLUE), CHAR(']', WHITE, BLUE) },				/* O */
+	{ CHAR('[', WHITE, RED), CHAR(']', WHITE, RED) },				/* Z */
+	{ CHAR('[', WHITE, MAGENTA), CHAR(']', WHITE, MAGENTA) },		/* S */
+	{ CHAR('[', WHITE, BLACK), CHAR(']', WHITE, BLACK) },			/* T */
+	/* frame tiles */
+	{ CHAR(G_UL_CORNER, WHITE, BLACK), CHAR(G_HLINE, WHITE, BLACK) },	/* top-left corner */
+	{ CHAR(G_HLINE, WHITE, BLACK), CHAR(G_UR_CORNER, WHITE, BLACK) },	/* top-right corner */
+	{ CHAR(G_LL_CORNER, WHITE, BLACK), CHAR(G_HLINE, WHITE, BLACK) },	/* bottom-left corner */
+	{ CHAR(G_HLINE, WHITE, BLACK), CHAR(G_LR_CORNER, WHITE, BLACK) },	/* bottom-right corner */
+	{ CHAR(G_L_TEE, WHITE, BLACK), CHAR(G_HLINE, WHITE, BLACK) },		/* left-T */
+	{ CHAR(G_HLINE, WHITE, BLACK), CHAR(G_R_TEE, WHITE, BLACK) },		/* right-T */
+	{ CHAR(G_HLINE, WHITE, BLACK), CHAR(G_HLINE, WHITE, BLACK) },		/* horizontal line */
+	{ CHAR(G_VLINE, WHITE, BLACK), CHAR(' ', WHITE, BLACK) },			/* left vertical line */
+	{ CHAR(' ', WHITE, BLACK), CHAR(G_VLINE, WHITE, BLACK) }			/* right vertical line */
+};
+
+static const char *bgdata[SCR_ROWS] = {
+	" #..........#{-----}",
+	" #..........#(.....)",
+	" #..........#[-----]",
+	" #..........#.......",
+	" #..........#       ",
+	" #..........#{-----}",
+	" #..........#(.....)",
+	" #..........#(.....)",
+	" #..........#>-----<",
+	" #..........#(.....)",
+	" #..........#(.....)",
+	" #..........#[-----]",
+	" #..........# {----}",
+	" #..........# (....)",
+	" #..........# (....)",
+	" #..........# (....)",
+	" #..........# (....)",
+	" #..........# [----]",
+	" ############       ",
+	"                    "
 };
 
 
@@ -117,6 +164,7 @@ int init_game(void)
 	srand(time(0));
 
 	tick_interval = 1000;
+	next_piece = rand() % NUM_PIECES;
 
 	ansi_clearscr();
 	ansi_cursor(0);
@@ -124,19 +172,63 @@ int init_game(void)
 	/* fill the screen buffer, and draw */
 	for(i=0; i<SCR_ROWS; i++) {
 		for(j=0; j<SCR_COLS; j++) {
-			if(i > PF_ROWS || j < PF_XOFFS - 1 || j > PF_XOFFS + PF_COLS) {
-				row[j] = TILE_BLACK;
-			} else if((i == PF_ROWS && j >= PF_XOFFS && j < PF_XOFFS + PF_COLS) ||
-					j == PF_XOFFS - 1 || j == PF_XOFFS + PF_COLS) {
-				row[j] = TILE_PFSEP;
-			} else {
-				row[j] = TILE_PF;
+			int tile;
+			switch(bgdata[i][j]) {
+			case '#':
+				tile = TILE_PFSEP;
+				break;
+			case '.':
+				tile = TILE_PF;
+				break;
+			case '{':
+				tile = TILE_FRM_TL;
+				break;
+			case '}':
+				tile = TILE_FRM_TR;
+				break;
+			case '[':
+				tile = TILE_FRM_BL;
+				break;
+			case ']':
+				tile = TILE_FRM_BR;
+				break;
+			case '>':
+				tile = TILE_FRM_LTEE;
+				break;
+			case '<':
+				tile = TILE_FRM_RTEE;
+				break;
+			case '-':
+				tile = TILE_FRM_HLINE;
+				break;
+			case '(':
+				tile = TILE_FRM_LVLINE;
+				break;
+			case ')':
+				tile = TILE_FRM_RVLINE;
+				break;
+			case ' ':
+			default:
+				tile = TILE_BLACK;
 			}
+			row[j] = tile;
 		}
 		row += SCR_COLS;
 	}
 
 	drawbg();
+
+	ansi_setcursor(1, 14 * 2);
+	ansi_setcolor(BLACK, WHITE);
+	fputs("S C O R E", stdout);
+
+	ansi_setcursor(6, 14 * 2);
+	fputs("L E V E L", stdout);
+
+	ansi_setcursor(9, 14 * 2);
+	fputs("L I N E S", stdout);
+
+	print_numbers();
 	fflush(stdout);
 
 	return 0;
@@ -226,6 +318,32 @@ long update(long msec)
 	return tick_interval - dt;
 }
 
+static void addscore(int nlines)
+{
+	static const int stab[] = {40, 100, 300, 1200};	/* bonus per line completed */
+
+	assert(nlines < 5);
+
+	score += stab[nlines - 1] * (level + 1);
+	lines += nlines;
+
+	print_numbers();
+}
+
+static void print_numbers(void)
+{
+	ansi_setcolor(BLACK, WHITE);
+
+	ansi_setcursor(3, 14 * 2);
+	printf("%10d", score);
+
+	ansi_setcursor(7, 17 * 2);
+	printf("%2d", level);
+
+	ansi_setcursor(10, 14 * 2);
+	printf("%8d", lines);
+	fflush(stdout);
+}
 
 #define C0	0x9b
 #define SS3	0x8f
@@ -349,7 +467,19 @@ void game_input(int c)
 
 static int spawn(void)
 {
-	cur_piece = rand() % NUM_PIECES;
+	static const int preview_pos[] = {13, 13};
+	int r, tries = 2;
+
+	do {
+		r = rand() % NUM_PIECES;
+	} while(tries-- > 0 && (r | cur_piece | next_piece) == cur_piece);
+
+	draw_piece(next_piece, preview_pos, 0, ERASE_PIECE);
+	draw_piece(r, preview_pos, 0, DRAW_PIECE);
+
+	cur_piece = next_piece;
+	next_piece = r;
+
 	prev_rot = cur_rot = 0;
 	pos[0] = piece_spawnpos[cur_piece][0];
 	next_pos[0] = pos[0] + 1;
@@ -385,6 +515,8 @@ static void stick(int piece, const int *pos)
 	int *pfline;
 	unsigned char *p = pieces[piece][cur_rot];
 
+	num_complines = 0;
+
 	for(i=0; i<4; i++) {
 		int x = pos[1] + BLKX(*p);
 		int y = pos[0] + BLKY(*p);
@@ -408,6 +540,10 @@ static void stick(int piece, const int *pos)
 	if(use_bell) {
 		putchar('\a');
 		fflush(stdout);
+	}
+
+	if(num_complines) {
+		addscore(num_complines);
 	}
 }
 

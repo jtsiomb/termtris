@@ -25,19 +25,12 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 #define NUM_PIECES	7
 
 static unsigned char pieces[NUM_PIECES][4][4] = {
-	/* straight piece */
+	/* L block */
 	{
-		{BLK(0, 2), BLK(1, 2), BLK(2, 2), BLK(3, 2)},
-		{BLK(1, 0), BLK(1, 1), BLK(1, 2), BLK(1, 3)},
-		{BLK(0, 2), BLK(1, 2), BLK(2, 2), BLK(3, 2)},
-		{BLK(1, 0), BLK(1, 1), BLK(1, 2), BLK(1, 3)}
-	},
-	/* box */
-	{
-		{BLK(1, 1), BLK(2, 1), BLK(1, 2), BLK(2, 2)},
-		{BLK(1, 1), BLK(2, 1), BLK(1, 2), BLK(2, 2)},
-		{BLK(1, 1), BLK(2, 1), BLK(1, 2), BLK(2, 2)},
-		{BLK(1, 1), BLK(2, 1), BLK(1, 2), BLK(2, 2)}
+		{BLK(0, 1), BLK(0, 2), BLK(1, 1), BLK(2, 1)},
+		{BLK(0, 0), BLK(1, 0), BLK(1, 1), BLK(1, 2)},
+		{BLK(0, 1), BLK(1, 1), BLK(2, 1), BLK(2, 0)},
+		{BLK(1, 0), BLK(1, 1), BLK(1, 2), BLK(2, 2)}
 	},
 	/* J block */
 	{
@@ -46,12 +39,26 @@ static unsigned char pieces[NUM_PIECES][4][4] = {
 		{BLK(0, 0), BLK(0, 1), BLK(1, 1), BLK(2, 1)},
 		{BLK(1, 0), BLK(2, 0), BLK(1, 1), BLK(1, 2)}
 	},
-	/* L block */
+	/* I block */
 	{
-		{BLK(0, 1), BLK(0, 2), BLK(1, 1), BLK(2, 1)},
-		{BLK(0, 0), BLK(1, 0), BLK(1, 1), BLK(1, 2)},
-		{BLK(0, 1), BLK(1, 1), BLK(2, 1), BLK(2, 0)},
-		{BLK(1, 0), BLK(1, 1), BLK(1, 2), BLK(2, 2)}
+		{BLK(0, 2), BLK(1, 2), BLK(2, 2), BLK(3, 2)},
+		{BLK(1, 0), BLK(1, 1), BLK(1, 2), BLK(1, 3)},
+		{BLK(0, 2), BLK(1, 2), BLK(2, 2), BLK(3, 2)},
+		{BLK(1, 0), BLK(1, 1), BLK(1, 2), BLK(1, 3)}
+	},
+	/* O block */
+	{
+		{BLK(1, 1), BLK(2, 1), BLK(1, 2), BLK(2, 2)},
+		{BLK(1, 1), BLK(2, 1), BLK(1, 2), BLK(2, 2)},
+		{BLK(1, 1), BLK(2, 1), BLK(1, 2), BLK(2, 2)},
+		{BLK(1, 1), BLK(2, 1), BLK(1, 2), BLK(2, 2)}
+	},
+	/* Z block */
+	{
+		{BLK(0, 1), BLK(1, 1), BLK(1, 2), BLK(2, 2)},
+		{BLK(0, 1), BLK(1, 1), BLK(1, 0), BLK(0, 2)},
+		{BLK(0, 1), BLK(1, 1), BLK(1, 2), BLK(2, 2)},
+		{BLK(0, 1), BLK(1, 1), BLK(1, 0), BLK(0, 2)}
 	},
 	/* S block */
 	{
@@ -66,18 +73,11 @@ static unsigned char pieces[NUM_PIECES][4][4] = {
 		{BLK(1, 0), BLK(1, 1), BLK(1, 2), BLK(0, 1)},
 		{BLK(0, 1), BLK(1, 1), BLK(2, 1), BLK(1, 0)},
 		{BLK(1, 0), BLK(1, 1), BLK(1, 2), BLK(2, 1)}
-	},
-	/* Z block */
-	{
-		{BLK(0, 1), BLK(1, 1), BLK(1, 2), BLK(2, 2)},
-		{BLK(0, 1), BLK(1, 1), BLK(1, 0), BLK(0, 2)},
-		{BLK(0, 1), BLK(1, 1), BLK(1, 2), BLK(2, 2)},
-		{BLK(0, 1), BLK(1, 1), BLK(1, 0), BLK(0, 2)}
 	}
 };
 
 static int piece_spawnpos[NUM_PIECES][2] = {
-	{-2, -2}, {-1, -2}, {-1, -2}, {-1, -2}, {-1, -2}, {-1, -2}, {-1, -2}
+	{-1, -2}, {-1, -2}, {-2, -2}, {-1, -2}, {-1, -2}, {-1, -2}, {-1, -2}
 };
 
 

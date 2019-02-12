@@ -24,6 +24,8 @@ void ansi_clearscr(void);
 void ansi_setcursor(int row, int col);
 void ansi_cursor(int show);
 
+void ansi_setcolor(int fg, int bg);
+
 /* convert a PC cga/ega/vga char+attr to an ANSI sequence and write it to stdout */
 void ansi_ibmchar(unsigned char c, unsigned char attr);
 
