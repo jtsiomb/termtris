@@ -17,6 +17,9 @@ send pictures!
 To run on a terminal other than the controlling terminal, simply specify the
 device using the `-t` commandline option.
 
+I always liked the GameBoy tetris best. So I made termtris as close as possible
+to that version gameplay-wise.
+
   - website: http://nuclear.mutantstargoat.com/sw/termtris
   - source repository: https://github.com/jtsiomb/termtris
 
