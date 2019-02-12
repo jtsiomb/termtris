@@ -81,7 +81,7 @@ static int cur_rot, prev_rot;
 static int complines[4];
 static int num_complines;
 static int gameover;
-
+static int pause;
 static int score, level, lines;
 
 enum {
@@ -246,11 +246,17 @@ void cleanup_game(void)
 
 #define BLINK_UPD_RATE	100
 #define GAMEOVER_FILL_RATE	50
+#define WAIT_INF	0x7fffffff
 
 long update(long msec)
 {
 	static long prev_tick;
 	long dt;
+
+	if(pause) {
+		prev_tick = msec;
+		return WAIT_INF;
+	}
 
 	dt = msec - prev_tick;
 
@@ -270,7 +276,7 @@ long update(long msec)
 			return GAMEOVER_FILL_RATE;
 		}
 
-		return 0xffffffff;
+		return WAIT_INF;
 	}
 
 	if(num_complines) {
@@ -467,6 +473,10 @@ void game_input(int c)
 		if(collision(cur_piece, next_pos)) {
 			next_pos[0] = pos[0];
 		}
+		break;
+
+	case 'p':
+		pause ^= 1;
 		break;
 
 	default:

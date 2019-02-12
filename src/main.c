@@ -297,13 +297,11 @@ static void read_joystick(void)
 		}
 		if(ev.type & JS_EVENT_BUTTON) {
 			if(ev.value) {
-				jstate |= 1 << ev.number;
-
 				if(ev.number >= 4) {
 					game_input('p');
+				} else {
+					game_input('w');
 				}
-			} else {
-				jstate &= ~(1 << ev.number);
 			}
 		}
 	}
