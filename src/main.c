@@ -171,7 +171,7 @@ int init(void)
 	dup(fd);
 
 	umask(002);
-	open("termtris.log", O_WRONLY | O_CREAT | O_TRUNC, 0664);
+	open("/tmp/termtris.log", O_WRONLY | O_CREAT | O_TRUNC, 0664);
 
 #ifdef USE_JOYSTICK
 	if(jsdev != -1) {
