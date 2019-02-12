@@ -155,6 +155,11 @@ static const char *bgdata[SCR_ROWS] = {
 	"                    "
 };
 
+#define NUM_LEVELS	21
+static const long level_speed[NUM_LEVELS] = {
+	887, 820, 753, 686, 619, 552, 469, 368, 285, 184,
+	167, 151, 134, 117, 107, 98, 88, 79, 69, 60, 50
+};
 
 int init_game(void)
 {
@@ -326,6 +331,11 @@ static void addscore(int nlines)
 
 	score += stab[nlines - 1] * (level + 1);
 	lines += nlines;
+
+	level = lines / 10;
+	if(level > NUM_LEVELS - 1) level = NUM_LEVELS - 1;
+
+	tick_interval = level_speed[level];
 
 	print_numbers();
 }
