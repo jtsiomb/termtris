@@ -26,6 +26,7 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 #include <sys/select.h>
 #include <sys/time.h>
 #include "game.h"
+#include "scoredb.h"
 
 #ifdef __linux__
 #include <sys/ioctl.h>
@@ -224,6 +225,11 @@ int parse_args(int argc, char **argv)
 #endif
 					break;
 
+				case 's':
+					printf("High Scores\n-----------\n");
+					print_scores(10);
+					exit(0);
+
 				case 'h':
 					print_usage(argv[0]);
 					exit(0);
@@ -256,6 +262,7 @@ void print_usage(const char *argv0)
 #ifdef USE_JOYSTICK
 	printf(" -j <dev>: use joystick device for input\n");
 #endif
+	printf(" -s: print top 10 high-scores and exit\n");
 	printf(" -h: print usage information and exit\n");
 }
 
