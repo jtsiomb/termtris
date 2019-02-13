@@ -31,6 +31,7 @@ Controls
   - `W` or *up arrow* rotates the block.
   - *enter*, *tab*, or `0` drops the block immediately.
   - `P` pauses and unpauses the game.
+  - *backspace*, or *delete* starts a new game.
   - `Q` or hitting escape twice, quits immediately.
 
 Additionally on GNU/Linux systems any joystick can be used to control the game.

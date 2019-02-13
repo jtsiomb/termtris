@@ -76,7 +76,7 @@ static void wrtile(int tileid);
 
 
 static int pos[2], next_pos[2];
-static int cur_piece = -1, next_piece = -1;
+static int cur_piece, next_piece;
 static int cur_rot, prev_rot;
 static int complines[4];
 static int num_complines;
@@ -169,9 +169,15 @@ int init_game(void)
 
 	srand(time(0));
 
-	tick_interval = 1000;
+	pause = 0;
+	gameover = 0;
+	num_complines = 0;
+	score = level = lines = 0;
+	tick_interval = level_speed[0];
+	cur_piece = -1;
 	next_piece = rand() % NUM_PIECES;
 
+	ansi_setcolor(WHITE, BLACK);
 	ansi_clearscr();
 	ansi_cursor(0);
 
@@ -493,6 +499,11 @@ void game_input(int c)
 
 	case 'p':
 		pause ^= 1;
+		break;
+
+	case '\b':
+	case 127:
+		init_game();
 		break;
 
 	default:
