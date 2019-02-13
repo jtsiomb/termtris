@@ -600,6 +600,7 @@ static void erase_completed(void)
 {
 	int i, j, srow, drow;
 	int *pfstart = scr + PF_YOFFS * SCR_COLS + PF_XOFFS;
+	int *dptr;
 
 	/* sort completed lines from highest to lowest row number */
 	for(i=0; i<num_complines-1; i++) {
@@ -613,6 +614,7 @@ static void erase_completed(void)
 	}
 
 	srow = drow = PF_ROWS - 1;
+	dptr = pfstart + drow * SCR_COLS;
 
 	for(i=0; i<PF_ROWS; i++) {
 		for(j=0; j<num_complines; j++) {
@@ -621,16 +623,19 @@ static void erase_completed(void)
 			}
 		}
 
-		if(srow < 0) break;
+		if(srow < 0) {
+			for(j=0; j<PF_COLS; j++) {
+				dptr[j] = TILE_PF;
+			}
 
-		if(srow != drow) {
+		} else if(srow != drow) {
 			int *sptr = pfstart + srow * SCR_COLS;
-			int *dptr = pfstart + drow * SCR_COLS;
 			memcpy(dptr, sptr, PF_COLS * sizeof *dptr);
 		}
 
 		srow--;
 		drow--;
+		dptr -= SCR_COLS;
 	}
 
 	drawpf();
