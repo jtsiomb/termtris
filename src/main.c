@@ -288,6 +288,9 @@ static void read_joystick(void)
 			} else {
 				if(val) {
 					dir = val > 0 ? BN_DOWN : BN_UP;
+					if(dir == BN_UP) {
+						game_input('\n');
+					}
 				} else {
 					dir = BN_DOWN | BN_UP;
 				}
