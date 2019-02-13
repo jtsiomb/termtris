@@ -29,6 +29,7 @@ Controls
   - `D` or *right arrow* moves the block right.
   - `S` or *down arrow* drops the block faster.
   - `W` or *up arrow* rotates the block.
+  - *enter*, *tab*, or `0` drops the block immediately.
   - `P` pauses and unpauses the game.
   - `Q` or hitting escape twice, quits immediately.
 

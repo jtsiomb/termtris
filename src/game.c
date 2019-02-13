@@ -480,6 +480,17 @@ void game_input(int c)
 		}
 		break;
 
+	case '\t':
+	case '\n':
+	case '\r':
+	case '0':
+		next_pos[0] = pos[0] + 1;
+		while(!collision(cur_piece, next_pos)) {
+			next_pos[0]++;
+		}
+		next_pos[0]--;
+		break;
+
 	case 'p':
 		pause ^= 1;
 		break;
