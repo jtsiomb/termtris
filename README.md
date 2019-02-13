@@ -56,8 +56,7 @@ details.
 
 Download
 --------
-
-Current release (1.1): http://nuclear.mutantstargoat.com/sw/termtris/termtris-1.1.tar.gz
+Current release (1.2): http://nuclear.mutantstargoat.com/sw/termtris/termtris-1.2.tar.gz
 
 Alternatively you may clone the latest version of the source code from the git
 repository:
