@@ -24,6 +24,7 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 #include "game.h"
 #include "pieces.h"
 #include "ansi.h"
+#include "scoredb.h"
 
 enum {
 	G_DIAMOND	= 0x04,
@@ -248,6 +249,9 @@ int init_game(void)
 
 void cleanup_game(void)
 {
+	if(score) {
+		save_score(score, lines, level);
+	}
 	ansi_reset();
 }
 
@@ -503,6 +507,9 @@ void game_input(int c)
 
 	case '\b':
 	case 127:
+		if(score) {
+			save_score(score, lines, level);
+		}
 		init_game();
 		break;
 

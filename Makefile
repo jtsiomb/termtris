@@ -1,4 +1,5 @@
 PREFIX = /usr/local
+SCOREDIR = /var/games/termtris
 
 src = $(wildcard src/*.c)
 obj = $(src:.c=.o)
@@ -28,6 +29,8 @@ cleandep:
 install: $(bin)
 	mkdir -p $(DESTDIR)$(PREFIX)/bin
 	cp $(bin) $(DESTDIR)$(PREFIX)/bin/$(bin)
+	mkdir -p $(DESTDIR)$(SCOREDIR)
+	chmod 0777 $(DESTDIR)$(SCOREDIR)
 
 .PHONY: uninstall
 uninstall:
