@@ -502,7 +502,14 @@ void game_input(int c)
 		break;
 
 	case 'p':
-		pause ^= 1;
+		if(gameover) {
+			if(score) {
+				save_score(score, lines, level);
+			}
+			init_game();
+		} else {
+			pause ^= 1;
+		}
 		break;
 
 	case '\b':
