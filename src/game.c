@@ -694,7 +694,7 @@ static void drawpf(void)
 	int *sptr = scr + PF_YOFFS * SCR_COLS + PF_XOFFS;
 
 	for(i=0; i<PF_ROWS; i++) {
-		ansi_setcursor(i, PF_XOFFS * 2);
+		ansi_setcursor(i + PF_YOFFS, PF_XOFFS * 2);
 		for(j=0; j<PF_COLS; j++) {
 			wrtile(sptr[j]);
 		}
