@@ -263,7 +263,20 @@ void print_usage(const char *argv0)
 	printf(" -j <dev>: use joystick device for input\n");
 #endif
 	printf(" -s: print top 10 high-scores and exit\n");
-	printf(" -h: print usage information and exit\n");
+	printf(" -h: print usage information and exit\n\n");
+
+	printf("Controls:\n");
+	printf(" <A> or <left arrow> moves the block left\n");
+	printf(" <D> or <right arrow> moves the block right\n");
+	printf(" <S> or <down arrow> drops the block faster\n");
+	printf(" <W> or <up arrow> rotates the block\n");
+	printf(" <enter>, <tab>, or <0> drops the block immediately\n");
+	printf(" <P> pauses and unpauses the game\n");
+	printf(" <backspace>, or <delete> starts a new game\n");
+	printf(" <Q> or hitting escape twice, quits immediately\n");
+#ifdef USE_JOYSTICK
+	printf(" This build also accepts joystick input.\n\n");
+#endif
 }
 
 long get_msec(void)
