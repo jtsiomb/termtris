@@ -706,7 +706,7 @@ static void draw_line(int row, int blink)
 {
 	int i;
 
-	ansi_setcursor(row, PF_XOFFS * 2);
+	ansi_setcursor(row + PF_YOFFS, PF_XOFFS * 2);
 
 	if(blink) {
 		int *sptr = scr + (row + PF_YOFFS) * SCR_COLS + PF_XOFFS;

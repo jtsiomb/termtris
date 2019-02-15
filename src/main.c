@@ -216,6 +216,10 @@ int parse_args(int argc, char **argv)
 					use_bell = 1;
 					break;
 
+				case 'm':
+					monochrome = 1;
+					break;
+
 				case 'j':
 #ifdef USE_JOYSTICK
 					jsdevfile = argv[++i];
@@ -259,6 +263,7 @@ void print_usage(const char *argv0)
 	printf("Options:\n");
 	printf(" -t <dev>: terminal device (default: /dev/tty)\n");
 	printf(" -b: use bell for sound ques (default: off)\n");
+	printf(" -m: monochrome output (default: off)\n");
 #ifdef USE_JOYSTICK
 	printf(" -j <dev>: use joystick device for input\n");
 #endif

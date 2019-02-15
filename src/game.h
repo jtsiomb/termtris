@@ -21,6 +21,7 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 int quit;
 long tick_interval;
 int use_bell;
+int monochrome;
 
 int init_game(void);
 void cleanup_game(void);

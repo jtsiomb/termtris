@@ -17,6 +17,7 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 */
 #include <stdio.h>
 #include <string.h>
+#include "game.h"
 
 enum {
 	CS_ASCII = 'B',
@@ -88,6 +89,8 @@ void ansi_cursor(int show)
 
 void ansi_setcolor(int fg, int bg)
 {
+	if(monochrome) return;
+
 	cur_attr = (fg << 4) | bg;
 	fg = cmap[fg];
 	bg = cmap[bg];
@@ -116,7 +119,7 @@ void ansi_ibmchar(unsigned char c, unsigned char attr)
 		}
 	}
 
-	if(attr != cur_attr) {
+	if(attr != cur_attr && !monochrome) {
 		unsigned char bg = cmap[attr & 7];
 		unsigned char fg = cmap[(attr >> 4) & 7];
 
