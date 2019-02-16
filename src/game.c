@@ -86,6 +86,9 @@ static int pause;
 static int score, level, lines;
 static int just_spawned;
 
+/*static int term_width = 80, term_height = 24;*/
+static int term_xoffs = 20, term_yoffs = 0;	/* TODO detect terminal size to set offsets */
+
 enum {
 	TILE_BLACK,
 	TILE_PF,
@@ -231,14 +234,14 @@ int init_game(void)
 
 	drawbg();
 
-	ansi_setcursor(1, 14 * 2);
+	ansi_setcursor(term_yoffs + 1, term_xoffs + 14 * 2);
 	ansi_setcolor(BLACK, WHITE);
 	fputs("S C O R E", stdout);
 
-	ansi_setcursor(6, 14 * 2);
+	ansi_setcursor(term_yoffs + 6, term_xoffs + 14 * 2);
 	fputs("L E V E L", stdout);
 
-	ansi_setcursor(9, 14 * 2);
+	ansi_setcursor(term_yoffs + 9, term_xoffs + 14 * 2);
 	fputs("L I N E S", stdout);
 
 	print_numbers();
@@ -362,13 +365,13 @@ static void print_numbers(void)
 {
 	ansi_setcolor(BLACK, WHITE);
 
-	ansi_setcursor(3, 14 * 2);
+	ansi_setcursor(term_yoffs + 3, term_xoffs + 14 * 2);
 	printf("%10d", score);
 
-	ansi_setcursor(7, 17 * 2);
+	ansi_setcursor(term_yoffs + 7, term_xoffs + 17 * 2);
 	printf("%2d", level);
 
-	ansi_setcursor(10, 14 * 2);
+	ansi_setcursor(term_yoffs + 10, term_xoffs + 14 * 2);
 	printf("%8d", lines);
 	fflush(stdout);
 }
@@ -669,7 +672,7 @@ static void draw_piece(int piece, const int *pos, int rot, int mode)
 
 		if(y < 0) continue;
 
-		ansi_setcursor(y, x * 2);
+		ansi_setcursor(term_yoffs + y, term_xoffs + x * 2);
 		wrtile(tile);
 	}
 	fflush(stdout);
@@ -681,7 +684,7 @@ static void drawbg(void)
 	int *sptr = scr;
 
 	for(i=0; i<SCR_ROWS; i++) {
-		ansi_setcursor(i, 0);
+		ansi_setcursor(term_yoffs + i, term_xoffs + 0);
 		for(j=0; j<SCR_COLS; j++) {
 			wrtile(*sptr++);
 		}
@@ -694,7 +697,7 @@ static void drawpf(void)
 	int *sptr = scr + PF_YOFFS * SCR_COLS + PF_XOFFS;
 
 	for(i=0; i<PF_ROWS; i++) {
-		ansi_setcursor(i + PF_YOFFS, PF_XOFFS * 2);
+		ansi_setcursor(term_yoffs + i + PF_YOFFS, term_xoffs + PF_XOFFS * 2);
 		for(j=0; j<PF_COLS; j++) {
 			wrtile(sptr[j]);
 		}
@@ -706,7 +709,7 @@ static void draw_line(int row, int blink)
 {
 	int i;
 
-	ansi_setcursor(row + PF_YOFFS, PF_XOFFS * 2);
+	ansi_setcursor(term_yoffs + row + PF_YOFFS, term_xoffs + PF_XOFFS * 2);
 
 	if(blink) {
 		int *sptr = scr + (row + PF_YOFFS) * SCR_COLS + PF_XOFFS;
