@@ -320,7 +320,6 @@ long update(long msec)
 			if(collision(cur_piece, next_pos)) {
 				next_pos[0] = pos[0];
 				stick(cur_piece, next_pos);
-				cur_piece = -1;
 				return 0;
 			}
 		} else {
@@ -602,6 +601,7 @@ static void stick(int piece, const int *pos)
 	unsigned char *p = pieces[piece][cur_rot];
 
 	num_complines = 0;
+	cur_piece = -1;
 
 	for(i=0; i<4; i++) {
 		int x = pos[1] + BLKX(*p);
