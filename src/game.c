@@ -63,6 +63,7 @@ enum { BLACK, BLUE, GREEN, CYAN, RED, MAGENTA, YELLOW, WHITE };
 
 int scr[SCR_COLS * SCR_ROWS];
 
+static void update_cur_piece(void);
 static void addscore(int nlines);
 static void print_numbers(void);
 static int spawn(void);
@@ -334,15 +335,22 @@ long update(long msec)
 		prev_tick = msec;
 	}
 
-	if(cur_piece >= 0 && (memcmp(pos, next_pos, sizeof pos) != 0 || cur_rot != prev_rot)) {
+	update_cur_piece();
+	return tick_interval - dt;
+}
+
+static void update_cur_piece(void)
+{
+	if(cur_piece < 0) return;
+
+	if(memcmp(pos, next_pos, sizeof pos) != 0 || cur_rot != prev_rot) {
 		draw_piece(cur_piece, pos, prev_rot, ERASE_PIECE);
 		draw_piece(cur_piece, next_pos, cur_rot, DRAW_PIECE);
 		memcpy(pos, next_pos, sizeof pos);
 		prev_rot = cur_rot;
 	}
-
-	return tick_interval - dt;
 }
+
 
 static void addscore(int nlines)
 {
@@ -461,34 +469,42 @@ void game_input(int c)
 		break;
 
 	case 'a':
-		next_pos[1] = pos[1] - 1;
-		if(collision(cur_piece, next_pos)) {
-			next_pos[1] = pos[1];
+		if(!pause) {
+			next_pos[1] = pos[1] - 1;
+			if(collision(cur_piece, next_pos)) {
+				next_pos[1] = pos[1];
+			}
 		}
 		break;
 
 	case 'd':
-		next_pos[1] = pos[1] + 1;
-		if(collision(cur_piece, next_pos)) {
-			next_pos[1] = pos[1];
+		if(!pause) {
+			next_pos[1] = pos[1] + 1;
+			if(collision(cur_piece, next_pos)) {
+				next_pos[1] = pos[1];
+			}
 		}
 		break;
 
 	case 'w':
 	case ' ':
-		prev_rot = cur_rot;
-		cur_rot = (cur_rot + 1) & 3;
-		if(collision(cur_piece, next_pos)) {
-			cur_rot = prev_rot;
+		if(!pause) {
+			prev_rot = cur_rot;
+			cur_rot = (cur_rot + 1) & 3;
+			if(collision(cur_piece, next_pos)) {
+				cur_rot = prev_rot;
+			}
 		}
 		break;
 
 	case 's':
 		/* ignore drops until the first update after a spawn */
-		if(!just_spawned) {
+		if(cur_piece >= 0 && !just_spawned && !pause) {
 			next_pos[0] = pos[0] + 1;
 			if(collision(cur_piece, next_pos)) {
 				next_pos[0] = pos[0];
+				update_cur_piece();
+				stick(cur_piece, next_pos);	/* stick immediately */
 			}
 		}
 		break;
@@ -497,11 +513,15 @@ void game_input(int c)
 	case '\n':
 	case '\r':
 	case '0':
-		next_pos[0] = pos[0] + 1;
-		while(!collision(cur_piece, next_pos)) {
-			next_pos[0]++;
+		if(!pause && cur_piece >= 0) {
+			next_pos[0] = pos[0] + 1;
+			while(!collision(cur_piece, next_pos)) {
+				next_pos[0]++;
+			}
+			next_pos[0]--;
+			update_cur_piece();
+			stick(cur_piece, next_pos);	/* stick immediately */
 		}
-		next_pos[0]--;
 		break;
 
 	case 'p':
