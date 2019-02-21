@@ -538,7 +538,9 @@ void game_input(int c)
 		print_numbers();
 		drawpf();
 		draw_piece(next_piece, preview_pos, 0, DRAW_PIECE);
-		draw_piece(cur_piece, next_pos, cur_rot, DRAW_PIECE);
+		if(!gameover) {
+			draw_piece(cur_piece, next_pos, cur_rot, DRAW_PIECE);
+		}
 		fflush(stdout);
 		break;
 
