@@ -306,6 +306,8 @@ void sighandler(int s)
 {
 	struct winsize winsz;
 
+	signal(s, sighandler);
+
 	switch(s) {
 	case SIGWINCH:
 		ioctl(1, TIOCGWINSZ, &winsz);
