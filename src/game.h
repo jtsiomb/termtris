@@ -23,6 +23,8 @@ long tick_interval;
 int use_bell;
 int monochrome;
 
+int term_width, term_height;
+
 int init_game(void);
 void cleanup_game(void);
 

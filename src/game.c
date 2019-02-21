@@ -87,8 +87,9 @@ static int pause;
 static int score, level, lines;
 static int just_spawned;
 
-/*static int term_width = 80, term_height = 24;*/
 static int term_xoffs = 20, term_yoffs = 0;	/* TODO detect terminal size to set offsets */
+
+static const int preview_pos[] = {13, 13};
 
 enum {
 	TILE_BLACK,
@@ -234,16 +235,6 @@ int init_game(void)
 	}
 
 	drawbg();
-
-	ansi_setcursor(term_yoffs + 1, term_xoffs + 14 * 2);
-	ansi_setcolor(BLACK, WHITE);
-	fputs("S C O R E", stdout);
-
-	ansi_setcursor(term_yoffs + 6, term_xoffs + 14 * 2);
-	fputs("L E V E L", stdout);
-
-	ansi_setcursor(term_yoffs + 9, term_xoffs + 14 * 2);
-	fputs("L I N E S", stdout);
 
 	print_numbers();
 	fflush(stdout);
@@ -542,6 +533,15 @@ void game_input(int c)
 		init_game();
 		break;
 
+	case '`':
+		drawbg();
+		print_numbers();
+		drawpf();
+		draw_piece(next_piece, preview_pos, 0, DRAW_PIECE);
+		draw_piece(cur_piece, next_pos, cur_rot, DRAW_PIECE);
+		fflush(stdout);
+		break;
+
 	default:
 		fprintf(stderr, "unhandled input: %x\n", c);
 		break;
@@ -550,7 +550,6 @@ void game_input(int c)
 
 static int spawn(void)
 {
-	static const int preview_pos[] = {13, 13};
 	int r, tries = 2;
 
 	do {
@@ -703,12 +702,27 @@ static void drawbg(void)
 	int i, j;
 	int *sptr = scr;
 
+	term_xoffs = term_width / 2 - SCR_COLS;
+
+	ansi_setcolor(WHITE, BLACK);
+	ansi_clearscr();
+
 	for(i=0; i<SCR_ROWS; i++) {
 		ansi_setcursor(term_yoffs + i, term_xoffs + 0);
 		for(j=0; j<SCR_COLS; j++) {
 			wrtile(*sptr++);
 		}
 	}
+
+	ansi_setcursor(term_yoffs + 1, term_xoffs + 14 * 2);
+	ansi_setcolor(BLACK, WHITE);
+	fputs("S C O R E", stdout);
+
+	ansi_setcursor(term_yoffs + 6, term_xoffs + 14 * 2);
+	fputs("L E V E L", stdout);
+
+	ansi_setcursor(term_yoffs + 9, term_xoffs + 14 * 2);
+	fputs("L I N E S", stdout);
 }
 
 static void drawpf(void)

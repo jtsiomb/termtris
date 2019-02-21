@@ -19,6 +19,7 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 #include <stdlib.h>
 #include <string.h>
 #include <errno.h>
+#include <signal.h>
 #include <unistd.h>
 #include <fcntl.h>
 #include <termios.h>
@@ -39,6 +40,7 @@ void cleanup(void);
 int parse_args(int argc, char **argv);
 void print_usage(const char *argv0);
 long get_msec(void);
+void sighandler(int s);
 
 static const char *termfile = "/dev/tty";
 static struct termios saved_term;
@@ -137,6 +139,7 @@ int init(void)
 {
 	int fd;
 	struct termios term;
+	struct winsize winsz;
 
 #ifdef USE_JOYSTICK
 	static const char *def_jsdevfile = "/dev/input/js0";
@@ -178,6 +181,10 @@ int init(void)
 	umask(002);
 	open("/tmp/termtris.log", O_WRONLY | O_CREAT | O_TRUNC, 0664);
 
+	ioctl(1, TIOCGWINSZ, &winsz);
+	term_width = winsz.ws_col;
+	term_height = winsz.ws_row;
+
 #ifdef USE_JOYSTICK
 	if(jsdev != -1) {
 		char name[256];
@@ -186,6 +193,8 @@ int init(void)
 		}
 	}
 #endif
+
+	signal(SIGWINCH, sighandler);
 
 	if(init_game() == -1) {
 		return -1;
@@ -291,6 +300,23 @@ long get_msec(void)
 	gettimeofday(&tv, 0);
 
 	return (tv.tv_sec - tv0.tv_sec) * 1000 + (tv.tv_usec - tv0.tv_usec) / 1000;
+}
+
+void sighandler(int s)
+{
+	struct winsize winsz;
+
+	switch(s) {
+	case SIGWINCH:
+		ioctl(1, TIOCGWINSZ, &winsz);
+		term_width = winsz.ws_col;
+		term_height = winsz.ws_row;
+		game_input('`');	/* redraw */
+		break;
+
+	default:
+		break;
+	}
 }
 
 #ifdef USE_JOYSTICK
