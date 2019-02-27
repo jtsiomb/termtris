@@ -78,7 +78,7 @@ static void wrtile(int tileid);
 
 
 static int pos[2], next_pos[2];
-static int cur_piece, next_piece;
+static int cur_piece, next_piece, prev_piece;
 static int cur_rot, prev_rot;
 static int complines[4];
 static int num_complines;
@@ -181,6 +181,7 @@ int init_game(void)
 	score = level = lines = 0;
 	tick_interval = level_speed[0];
 	cur_piece = -1;
+	prev_piece = 0;
 	next_piece = rand() % NUM_PIECES;
 
 	ansi_setcolor(WHITE, BLACK);
@@ -556,7 +557,7 @@ static int spawn(void)
 
 	do {
 		r = rand() % NUM_PIECES;
-	} while(tries-- > 0 && (r | cur_piece | next_piece) == cur_piece);
+	} while(tries-- > 0 && (r | prev_piece | next_piece) == prev_piece);
 
 	draw_piece(next_piece, preview_pos, 0, ERASE_PIECE);
 	draw_piece(r, preview_pos, 0, DRAW_PIECE);
@@ -602,6 +603,7 @@ static void stick(int piece, const int *pos)
 	unsigned char *p = pieces[piece][cur_rot];
 
 	num_complines = 0;
+	prev_piece = cur_piece;	/* used by the spawn routine */
 	cur_piece = -1;
 
 	for(i=0; i<4; i++) {
