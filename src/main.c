@@ -114,7 +114,7 @@ int main(int argc, char **argv)
 			}
 
 #ifdef USE_JOYSTICK
-			if(FD_ISSET(jsdev, &rdset)) {
+			if(jsdev != -1 && FD_ISSET(jsdev, &rdset)) {
 				read_joystick();
 			}
 #endif
