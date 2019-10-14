@@ -47,7 +47,7 @@ int save_score(int score, int lines, int level)
 	struct flock flk;
 
 	if(!(pw = getpwuid(getuid()))) {
-		perror("save_score: failed to retreive user information");
+		perror("save_score: failed to retrieve user information");
 		return -1;
 	}
 	newscore.user = pw->pw_name;
