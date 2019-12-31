@@ -56,13 +56,17 @@ details.
 
 Download
 --------
-Current release (1.3): http://nuclear.mutantstargoat.com/sw/termtris/termtris-1.3.tar.gz
+Current release (1.4): http://nuclear.mutantstargoat.com/sw/termtris/termtris-1.4.tar.gz
 
 Alternatively you may clone the latest version of the source code from the git
 repository:
 
     git clone https://github.com/jtsiomb/termtris
 
+Pre-compiled binaries might be available in your package management system of
+choice, but please do not submit any bug reports without first trying to build
+termtris yourself from the latest git source code.
+  - Debian: `apt-get install termtris`
 
 Build
 -----

@@ -1,12 +1,15 @@
+# --- build options ---
 PREFIX = /usr/local
+BINDIR = bin
 SCOREDIR = /var/games/termtris
+# ---------------------
 
 src = $(wildcard src/*.c)
 obj = $(src:.c=.o)
 dep = $(obj:.o=.d)
 bin = termtris
 
-CFLAGS = -pedantic -Wall -g
+CFLAGS = -pedantic -Wall -O2 -g -DSCOREDIR=\"$(SCOREDIR)\"
 
 $(bin): $(obj)
 	$(CC) -o $@ $(obj) $(LDFLAGS)
@@ -27,11 +30,11 @@ cleandep:
 
 .PHONY: install
 install: $(bin)
-	mkdir -p $(DESTDIR)$(PREFIX)/bin
-	cp $(bin) $(DESTDIR)$(PREFIX)/bin/$(bin)
+	mkdir -p $(DESTDIR)$(PREFIX)/$(BINDIR)
+	cp $(bin) $(DESTDIR)$(PREFIX)/$(BINDIR)/$(bin)
 	mkdir -p $(DESTDIR)$(SCOREDIR)
 	chmod 0777 $(DESTDIR)$(SCOREDIR)
 
 .PHONY: uninstall
 uninstall:
-	rm -f $(DESTDIR)$(PREFIX)/bin/$(bin)
+	rm -f $(DESTDIR)$(PREFIX)/$(BINDIR)/$(bin)
