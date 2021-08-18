@@ -490,7 +490,7 @@ void game_input(int c)
 
 	case 's':
 		/* ignore drops until the first update after a spawn */
-		if(cur_piece >= 0 && !just_spawned && !pause) {
+		if(cur_piece >= 0 && !just_spawned && !pause && !gameover) {
 			next_pos[0] = pos[0] + 1;
 			if(collision(cur_piece, next_pos)) {
 				next_pos[0] = pos[0];
@@ -504,7 +504,7 @@ void game_input(int c)
 	case '\n':
 	case '\r':
 	case '0':
-		if(!pause && cur_piece >= 0) {
+		if(!pause && !gameover && cur_piece >= 0) {
 			next_pos[0] = pos[0] + 1;
 			while(!collision(cur_piece, next_pos)) {
 				next_pos[0]++;
