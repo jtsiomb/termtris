@@ -9,7 +9,7 @@ obj = $(src:.c=.o)
 dep = $(obj:.o=.d)
 bin = termtris
 
-CFLAGS = -pedantic -Wall -O2 -g -DSCOREDIR=\"$(SCOREDIR)\"
+CFLAGS = -pedantic -Wall -O2 -g -DSCOREDIR=\"$(SCOREDIR)\" -fcommon
 
 $(bin): $(obj)
 	$(CC) -o $@ $(obj) $(LDFLAGS)
