@@ -65,15 +65,21 @@ static unsigned char cmap[] = {0, 4, 2, 6, 1, 5, 3, 7};
 static unsigned char cur_attr = 0xff;
 static int cur_cs = CS_ASCII;
 
-void ansi_reset(void)
+void ansi_recall(void)
 {
 	fputs("\033c", stdout);
 	fflush(stdout);
 }
 
+void ansi_reset(void)
+{
+	fputs("\033[!p", stdout);
+	fflush(stdout);
+}
+
 void ansi_clearscr(void)
 {
-	fputs("\033[2J", stdout);
+	fputs("\033[H\033[2J", stdout);
 }
 
 void ansi_setcursor(int row, int col)

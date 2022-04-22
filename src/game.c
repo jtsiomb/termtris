@@ -249,6 +249,7 @@ void cleanup_game(void)
 		save_score(score, lines, level);
 	}
 	ansi_reset();
+	ansi_clearscr();
 }
 
 #define BLINK_UPD_RATE	100
