@@ -2,7 +2,7 @@ Termtris - tetris game for ANSI/VT220 terminals
 ===============================================
 
 ![shot](http://nuclear.mutantstargoat.com/sw/termtris/img/termtris_shot-thumb.png)
-![vt420](http://nuclear.mutantstargoat.com/sw/termtris/img/termtris_vt420-thumb.png)
+![vt420](http://nuclear.mutantstargoat.com/sw/termtris/img/termtris_vt420-thumb.jpg)
 
 About
 -----
