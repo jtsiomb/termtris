@@ -2,17 +2,15 @@ Termtris - tetris game for ANSI/VT220 terminals
 ===============================================
 
 ![shot](http://nuclear.mutantstargoat.com/sw/termtris/img/termtris_shot-thumb.png)
+![vt420](http://nuclear.mutantstargoat.com/sw/termtris/img/termtris_vt420-thumb.png)
 
 About
 -----
 Termtris runs on UNIX systems and requires an ANSI or VT220-compatible terminal
-for input and output. It has been tested with xterm, rxvt, the Linux console,
-and kermit running on MS-DOS over a serial link, but it should work on any
-terminal capable of interpreting ANSI escape sequences for cursor addressing,
-character set selection, and color attributes.
-
-I don't have a proper VT serial terminal to try it on, so if you do, please
-send pictures!
+for input and output. It has been tested with a VT420, xterm, rxvt, the Linux
+console, and kermit running on MS-DOS over a serial link, but it should work on
+any terminal capable of interpreting ANSI escape sequences for cursor
+addressing, character set selection, and color attributes.
 
 To run on a terminal other than the controlling terminal, simply specify the
 device using the `-t` commandline option.
