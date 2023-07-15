@@ -1,0 +1,31 @@
+# --- build options ---
+PREFIX = /usr/local
+BINDIR = bin
+SCOREDIR = /var/games/termtris
+# ---------------------
+
+obj = src/ansi.o src/game.o src/main.o src/scoredb.o
+bin = termtris
+
+CFLAGS = -O2 -g3 -DSCOREDIR=\"$(SCOREDIR)\" -DNO_INTTYPES_H
+
+$(bin): $(obj)
+	$(CC) -o $@ $(obj) $(LDFLAGS)
+
+.c.o:
+	$(CC) -o $@ $(CFLAGS) -c $<
+
+.PHONY: clean
+clean:
+	rm -f $(obj) $(bin)
+
+.PHONY: install
+install: $(bin)
+	mkdir -p $(DESTDIR)$(PREFIX)/$(BINDIR)
+	cp $(bin) $(DESTDIR)$(PREFIX)/$(BINDIR)/$(bin)
+	mkdir -p $(DESTDIR)$(SCOREDIR)
+	chmod 0777 $(DESTDIR)$(SCOREDIR)
+
+.PHONY: uninstall
+uninstall:
+	rm -f $(DESTDIR)$(PREFIX)/$(BINDIR)/$(bin)
