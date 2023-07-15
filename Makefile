@@ -9,16 +9,12 @@ obj = $(src:.c=.o)
 dep = $(obj:.o=.d)
 bin = termtris
 
-CFLAGS = -pedantic -Wall -O2 -g -DSCOREDIR=\"$(SCOREDIR)\" -fcommon
+CFLAGS = -pedantic -Wall -O2 -g -DSCOREDIR=\"$(SCOREDIR)\" -MMD
 
 $(bin): $(obj)
 	$(CC) -o $@ $(obj) $(LDFLAGS)
 
 -include $(dep)
-
-%.d: %.c
-	@echo depfile $@
-	@$(CPP) $(CFLAGS) $< -MM -MT $(@:.d=.o) >$@
 
 .PHONY: clean
 clean:

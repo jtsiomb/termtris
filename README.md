@@ -45,7 +45,7 @@ time.
 
 License
 -------
-Copyright (C) 2019-2022 John Tsiombikas <nuclear@member.fsf.org>
+Copyright (C) 2019-2023 John Tsiombikas <nuclear@member.fsf.org>
 
 This program is free software. Feel free to use, modify, and/or redistribute it
 under the terms of the GNU General Public License version 3, or at your option,
@@ -54,7 +54,7 @@ details.
 
 Download
 --------
-Current release (1.5): http://nuclear.mutantstargoat.com/sw/termtris/termtris-1.5.tar.gz
+Current release (1.6): http://nuclear.mutantstargoat.com/sw/termtris/termtris-1.6.tar.gz
 
 Alternatively you may clone the latest version of the source code from the git
 repository:

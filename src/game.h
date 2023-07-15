@@ -1,6 +1,6 @@
 /*
 Termtris - a tetris game for ANSI/VT220 terminals
-Copyright (C) 2019-2022  John Tsiombikas <nuclear@member.fsf.org>
+Copyright (C) 2019-2023  John Tsiombikas <nuclear@member.fsf.org>
 
 This program is free software: you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
@@ -18,12 +18,12 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 #ifndef GAME_H_
 #define GAME_H_
 
-int quit;
-long tick_interval;
-int use_bell;
-int monochrome;
+extern int quit;
+extern long tick_interval;
+extern int use_bell;
+extern int monochrome;
 
-int term_width, term_height;
+extern int term_width, term_height;
 
 int init_game(void);
 void cleanup_game(void);
