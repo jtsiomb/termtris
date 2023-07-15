@@ -160,7 +160,7 @@ int init(void)
 		return -1;
 	}
 	saved_term = term;
-	term.c_iflag &= ~(IGNBRK | BRKINT | PARMRK | ISTRIP | INLCR | IGNCR | ICRNL | IXON);
+	term.c_iflag &= ~(IGNBRK | BRKINT | PARMRK | ISTRIP | INLCR | IGNCR | ICRNL);
 	term.c_oflag &= ~OPOST;
 	term.c_lflag &= ~(ECHO | ECHONL | ICANON | ISIG | IEXTEN);
 	term.c_cflag = (term.c_cflag & ~(CSIZE | PARENB)) | CS8;
