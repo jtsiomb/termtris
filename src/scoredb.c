@@ -20,6 +20,8 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 #include <string.h>
 #include <errno.h>
 #include <ctype.h>
+#include <unistd.h>
+#include <fcntl.h>
 #include "scoredb.h"
 
 #if defined(unix) || defined(__unix) || defined(__APPLE__)
@@ -27,14 +29,12 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 #endif
 
 #ifdef __unix__
-#include <unistd.h>
-#include <fcntl.h>
 #include <pwd.h>
 #endif
 
 struct score_entry {
 	char *user;
-	int score, lines, level;
+	long score, lines, level;
 	struct score_entry *next;
 };
 
@@ -48,15 +48,14 @@ static void write_score(FILE *fp, struct score_entry *s);
 static struct score_entry *read_scores(FILE *fp);
 static void free_list(struct score_entry *s);
 
-int save_score(int score, int lines, int level)
+int save_score(long score, long lines, long level)
 {
-	int count;
+	int fd, count;
 	FILE *fp;
 	struct score_entry *slist, *sptr;
 	struct score_entry newscore;
 
 #ifdef __unix__
-	int fd;
 	struct passwd *pw;
 	struct flock flk;
 
@@ -65,6 +64,9 @@ int save_score(int score, int lines, int level)
 		return -1;
 	}
 	newscore.user = pw->pw_name;
+#else
+	newscore.user = "dosuser";
+#endif
 	newscore.score = score;
 	newscore.lines = lines;
 	newscore.level = level;
@@ -75,16 +77,12 @@ int save_score(int score, int lines, int level)
 		return -1;
 	}
 
+#ifdef __unix__
 	/* lock the file */
 	flk.l_type = F_WRLCK;
 	flk.l_start = flk.l_len = 0;
 	flk.l_whence = SEEK_SET;
 	while(fcntl(fd, F_SETLKW, &flk) == -1);
-#else
-	if(!(fp = fopen(SCOREDB_PATH, "r+b"))) {
-		fprintf(stderr, "failed to save scores to %s: %s\n", SCOREDB_PATH, strerror(errno));
-		return -1;
-	}
 #endif
 
 	slist = read_scores(fp);
@@ -121,7 +119,7 @@ int save_score(int score, int lines, int level)
 
 static void write_score(FILE *fp, struct score_entry *s)
 {
-	fprintf(fp, "%s %d/%d/%d\n", s->user, s->score, s->lines, s->level);
+	fprintf(fp, "%s %ld/%ld/%ld\n", s->user, s->score, s->lines, s->level);
 }
 
 static char *skip_space(char *s)
@@ -134,7 +132,7 @@ static char *skip_space(char *s)
 static int parse_score(char *buf, struct score_entry *ent)
 {
 	char *userptr, *scoreptr;
-	int scores[3];
+	long scores[3];
 
 	if(!(userptr = skip_space(buf))) return -1;
 	scoreptr = userptr;
@@ -144,7 +142,7 @@ static int parse_score(char *buf, struct score_entry *ent)
 	*scoreptr = 0;
 	if(!(scoreptr = skip_space(scoreptr + 1))) return -1;
 
-	if(sscanf(scoreptr, "%d/%d/%d", scores, scores + 1, scores + 2) != 3) {
+	if(sscanf(scoreptr, "%ld/%ld/%ld", scores, scores + 1, scores + 2) != 3) {
 		return -1;
 	}
 
@@ -209,7 +207,7 @@ int print_scores(int num)
 	struct flock flk;
 #endif
 
-	if(!(fp = fopen(SCOREDB_PATH, "r"))) {
+	if(!(fp = fopen(SCOREDB_PATH, "rb"))) {
 		fprintf(stderr, "no high-scores found\n");
 		return -1;
 	}
@@ -227,7 +225,7 @@ int print_scores(int num)
 		if(parse_score(buf, &sc) == -1) {
 			continue;
 		}
-		printf("%2d. %s - %d pts  (%d lines)\n", i + 1, sc.user, sc.score, sc.lines);
+		printf("%2d. %s - %ld pts  (%ld lines)\n", i + 1, sc.user, sc.score, sc.lines);
 	}
 
 #ifdef __unix__

@@ -14,27 +14,23 @@ ansi_clearscr_:
 	ret
 
 
-	align 2
-curpos dw 0
-
 	global ansi_cursor_
 ansi_cursor_:
 	push bx
 	push cx
-	test ax, ax
-	jnz .show
-	; save current cursor position
+
+	push ax
 	mov ax, 300h
 	xor bx, bx
 	int 10h
-	mov [curpos], dx
-	; hide by moving off-screen
-	xor dx, 2600h
-	jmp .setcur
-.show:
-	mov dx, [curpos]
-.setcur:
-	mov ax, 200h
+	and ch, 0dfh
+	pop ax
+
+	test ax, ax
+	jnz .skiphide
+	or ch, 20h
+.skiphide:
+	mov ax, 100h
 	int 10h
 	pop cx
 	pop bx
@@ -73,18 +69,23 @@ advcursor:
 	mov ax, 200h
 	int 10h
 	ret
+
+	extern _monochrome
 	
 	global ansi_ibmchar_
 ansi_ibmchar_:
 	push bx
 	push cx
 	mov ah, 9
-	xor bx, bx
+	mov bx, 7
+	cmp word [_monochrome], 0
+	jnz .skipattr
 	rol dl, 1
 	rol dl, 1
 	rol dl, 1
 	rol dl, 1
 	mov bl, dl
+.skipattr:
 	mov cx, 1
 	int 10h
 	call advcursor

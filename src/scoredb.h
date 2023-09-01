@@ -18,7 +18,7 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 #ifndef SCOREDB_H_
 #define SCOREDB_H_
 
-int save_score(int score, int lines, int level);
+int save_score(long score, long lines, long level);
 int print_scores(int num);
 
 #endif	/* SCOREDB_H_ */

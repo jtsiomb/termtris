@@ -36,9 +36,13 @@ $(bin): $(obj)
 clean: .symbolic
 	rm -f $(obj)
 	rm -f $(bin)
+	rm -f *.lnk
+	rm -f termtris.map
 !else
 clean: .symbolic
 	del src\*.obj
 	del src\dos\*.obj
 	del $(bin)
+	del *.lnk
+	del termtris.map
 !endif

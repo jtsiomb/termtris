@@ -74,6 +74,7 @@ int scr[SCR_COLS * SCR_ROWS];
 static void update_cur_piece(void);
 static void addscore(int nlines);
 static void print_numbers(void);
+static void print_help(void);
 static int spawn(void);
 static int collision(int piece, const int *pos);
 static void stick(int piece, const int *pos);
@@ -83,7 +84,7 @@ static void drawbg(void);
 static void drawpf(void);
 static void draw_line(int row, int blink);
 static void wrtile(int tileid);
-static void wrstr(char *s, int attr);
+static void wrstr(const char *s, int attr);
 
 
 static int pos[2], next_pos[2];
@@ -93,8 +94,9 @@ static int complines[4];
 static int num_complines;
 static int gameover;
 static int pause;
-static int score, level, lines;
+static long score, level, lines;
 static int just_spawned;
+static int show_help;
 
 static int term_xoffs = 20, term_yoffs = 0;	/* TODO detect terminal size to set offsets */
 
@@ -177,6 +179,20 @@ static const long level_speed[NUM_LEVELS] = {
 	167, 151, 134, 117, 107, 98, 88, 79, 69, 60, 50
 };
 
+static const char *helpstr[] = {
+	"   Toggle (H)elp",
+	"",
+	"left,right,down: move",
+	"   up/space: rotate",
+	"enter/tab/0: drop",
+	" backsp/del: new game",
+	"          P: pause",
+	"          Q: quit",
+	"",
+	"   High scores:",
+	"      termtris -s"
+};
+
 int init_game(void)
 {
 	int i, j;
@@ -247,6 +263,7 @@ int init_game(void)
 	drawbg();
 
 	print_numbers();
+	print_help();
 	fflush(stdout);
 
 	return 0;
@@ -377,16 +394,30 @@ static void print_numbers(void)
 	ansi_setcolor(BLACK, WHITE);
 
 	ansi_setcursor(term_yoffs + 3, term_xoffs + 14 * 2);
-	sprintf(buf, "%10d", score);
+	sprintf(buf, "%10ld", score);
 	wrstr(buf, 7);
 
 	ansi_setcursor(term_yoffs + 7, term_xoffs + 17 * 2);
-	sprintf(buf, "%2d", level);
+	sprintf(buf, "%2ld", level);
 	wrstr(buf, 7);
 
 	ansi_setcursor(term_yoffs + 10, term_xoffs + 14 * 2);
-	sprintf(buf, "%8d", lines);
+	sprintf(buf, "%8ld", lines);
 	wrstr(buf, 7);
+}
+
+static void print_help(void)
+{
+	int i;
+
+	for(i=0; i<sizeof helpstr/sizeof *helpstr; i++) {
+		ansi_setcursor(i + 1, 0);
+		if(!i || show_help) {
+			wrstr(helpstr[i], 0x70);
+		} else {
+			wrstr("                     ", 0x70);
+		}
+	}
 }
 
 #define C0	0x9b
@@ -548,6 +579,12 @@ void game_input(int c)
 		init_game();
 		break;
 
+	case 'h':
+		show_help ^= 1;
+		print_help();
+		fflush(stdout);
+		break;
+
 	case '`':
 		drawbg();
 		print_numbers();
@@ -560,7 +597,7 @@ void game_input(int c)
 		break;
 
 	default:
-		fprintf(stderr, "unhandled input: %x\n", c);
+		/*fprintf(stderr, "unhandled input: %x\n", c);*/
 		break;
 	}
 }
@@ -724,6 +761,7 @@ static void drawbg(void)
 
 	ansi_setcolor(WHITE, BLACK);
 	ansi_clearscr();
+	ansi_cursor(0);
 
 	for(i=0; i<SCR_ROWS; i++) {
 		ansi_setcursor(term_yoffs + i, term_xoffs + 0);
@@ -789,7 +827,7 @@ static void wrtile(int tileid)
 	}
 }
 
-static void wrstr(char *s, int attr)
+static void wrstr(const char *s, int attr)
 {
 	while(*s) {
 		ansi_ibmchar(*s++, attr);
