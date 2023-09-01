@@ -4,12 +4,12 @@ BINDIR = bin
 SCOREDIR = /var/games/termtris
 # ---------------------
 
-src = $(wildcard src/*.c)
+src = $(wildcard src/unix/*.c) $(wildcard src/*.c)
 obj = $(src:.c=.o)
 dep = $(obj:.o=.d)
 bin = termtris
 
-CFLAGS = -pedantic -Wall -O2 -g -DSCOREDIR=\"$(SCOREDIR)\" -MMD
+CFLAGS = -pedantic -Wall -O2 -g -Isrc -DSCOREDIR=\"$(SCOREDIR)\" -MMD
 
 $(bin): $(obj)
 	$(CC) -o $@ $(obj) $(LDFLAGS)

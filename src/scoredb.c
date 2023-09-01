@@ -20,10 +20,17 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 #include <string.h>
 #include <errno.h>
 #include <ctype.h>
+#include "scoredb.h"
+
+#if defined(unix) || defined(__unix) || defined(__APPLE__)
+#define __unix__ 1
+#endif
+
+#ifdef __unix__
 #include <unistd.h>
 #include <fcntl.h>
 #include <pwd.h>
-#include "scoredb.h"
+#endif
 
 struct score_entry {
 	char *user;
@@ -31,7 +38,11 @@ struct score_entry {
 	struct score_entry *next;
 };
 
+#ifdef SCOREDIR
 #define SCOREDB_PATH	SCOREDIR "/scores"
+#else
+#define SCOREDB_PATH	"scores"
+#endif
 
 static void write_score(FILE *fp, struct score_entry *s);
 static struct score_entry *read_scores(FILE *fp);
@@ -39,11 +50,14 @@ static void free_list(struct score_entry *s);
 
 int save_score(int score, int lines, int level)
 {
-	int fd, count;
+	int count;
 	FILE *fp;
-	struct passwd *pw;
 	struct score_entry *slist, *sptr;
 	struct score_entry newscore;
+
+#ifdef __unix__
+	int fd;
+	struct passwd *pw;
 	struct flock flk;
 
 	if(!(pw = getpwuid(getuid()))) {
@@ -66,6 +80,12 @@ int save_score(int score, int lines, int level)
 	flk.l_start = flk.l_len = 0;
 	flk.l_whence = SEEK_SET;
 	while(fcntl(fd, F_SETLKW, &flk) == -1);
+#else
+	if(!(fp = fopen(SCOREDB_PATH, "r+b"))) {
+		fprintf(stderr, "failed to save scores to %s: %s\n", SCOREDB_PATH, strerror(errno));
+		return -1;
+	}
+#endif
 
 	slist = read_scores(fp);
 
@@ -86,11 +106,13 @@ int save_score(int score, int lines, int level)
 	}
 	fflush(fp);
 
+#ifdef __unix__
 	/* unlock the file */
 	flk.l_type = F_UNLCK;
 	flk.l_start = flk.l_len = 0;
 	flk.l_whence = SEEK_SET;
 	fcntl(fd, F_SETLK, &flk);
+#endif
 
 	free_list(slist);
 	fclose(fp);
@@ -181,19 +203,23 @@ int print_scores(int num)
 {
 	int i;
 	FILE *fp;
-	struct flock flk;
 	char buf[128];
 	struct score_entry sc;
+#ifdef __unix__
+	struct flock flk;
+#endif
 
 	if(!(fp = fopen(SCOREDB_PATH, "r"))) {
 		fprintf(stderr, "no high-scores found\n");
 		return -1;
 	}
 
+#ifdef __unix__
 	flk.l_type = F_RDLCK;
 	flk.l_start = flk.l_len = 0;
 	flk.l_whence = SEEK_SET;
 	while(fcntl(fileno(fp), F_SETLKW, &flk) == -1);
+#endif
 
 	for(i=0; i<num; i++) {
 		if(!fgets(buf, sizeof buf, fp)) break;
@@ -204,10 +230,12 @@ int print_scores(int num)
 		printf("%2d. %s - %d pts  (%d lines)\n", i + 1, sc.user, sc.score, sc.lines);
 	}
 
+#ifdef __unix__
 	flk.l_type = F_UNLCK;
 	flk.l_start = flk.l_len = 0;
 	flk.l_whence = SEEK_SET;
 	fcntl(fileno(fp), F_SETLK, &flk);
+#endif
 
 	fclose(fp);
 	return 0;

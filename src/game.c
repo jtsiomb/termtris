@@ -83,6 +83,7 @@ static void drawbg(void);
 static void drawpf(void);
 static void draw_line(int row, int blink);
 static void wrtile(int tileid);
+static void wrstr(char *s, int attr);
 
 
 static int pos[2], next_pos[2];
@@ -371,17 +372,21 @@ static void addscore(int nlines)
 
 static void print_numbers(void)
 {
+	char buf[16];
+
 	ansi_setcolor(BLACK, WHITE);
 
 	ansi_setcursor(term_yoffs + 3, term_xoffs + 14 * 2);
-	printf("%10d", score);
+	sprintf(buf, "%10d", score);
+	wrstr(buf, 7);
 
 	ansi_setcursor(term_yoffs + 7, term_xoffs + 17 * 2);
-	printf("%2d", level);
+	sprintf(buf, "%2d", level);
+	wrstr(buf, 7);
 
 	ansi_setcursor(term_yoffs + 10, term_xoffs + 14 * 2);
-	printf("%8d", lines);
-	fflush(stdout);
+	sprintf(buf, "%8d", lines);
+	wrstr(buf, 7);
 }
 
 #define C0	0x9b
@@ -729,13 +734,13 @@ static void drawbg(void)
 
 	ansi_setcursor(term_yoffs + 1, term_xoffs + 14 * 2);
 	ansi_setcolor(BLACK, WHITE);
-	fputs("S C O R E", stdout);
+	wrstr("S C O R E", 7);
 
 	ansi_setcursor(term_yoffs + 6, term_xoffs + 14 * 2);
-	fputs("L E V E L", stdout);
+	wrstr("L E V E L", 7);
 
 	ansi_setcursor(term_yoffs + 9, term_xoffs + 14 * 2);
-	fputs("L I N E S", stdout);
+	wrstr("L I N E S", 7);
 }
 
 static void drawpf(void)
@@ -781,5 +786,12 @@ static void wrtile(int tileid)
 		unsigned char ca = c >> 8;
 
 		ansi_ibmchar(cc, ca);
+	}
+}
+
+static void wrstr(char *s, int attr)
+{
+	while(*s) {
+		ansi_ibmchar(*s++, attr);
 	}
 }

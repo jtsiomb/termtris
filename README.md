@@ -15,6 +15,9 @@ addressing, character set selection, and color attributes.
 To run on a terminal other than the controlling terminal, simply specify the
 device using the `-t` commandline option.
 
+Termtris also runs on DOS now. It will run on any IBM PC compatible with any
+graphics card (MDA, CGA, EGA, VGA, SVGA).
+
 I always liked the GameBoy tetris best. So I made termtris as close as possible
 to that version gameplay-wise.
 
@@ -66,8 +69,8 @@ choice, but please do not submit any bug reports without first trying to build
 termtris yourself from the latest git source code.
   - Debian/Ubuntu/Mint: `apt-get install termtris`
 
-Build
------
+Build (UNIX)
+------------
 There are no external dependencies. Simply type `make` to build, and `make
 install` if you wish to install termtris.
 
@@ -76,3 +79,8 @@ Default installation prefix is `/usr/local`. Change the first line of the
 rule like so:
 
     make PREFIX=/some/other/prefix install
+
+Build (DOS)
+-----------
+To build the DOS version of termtris you'll need some version of the Watcom or
+OpenWatcom C compiler, and NASM. Build by typing `make -f Makefile.wat`.

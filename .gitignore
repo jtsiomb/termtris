@@ -3,3 +3,12 @@
 *.swp
 *.log
 termtris
+
+*.obj
+*.OBJ
+*.lnk
+*.LNK
+*.com
+*.COM
+*.map
+*.MAP
