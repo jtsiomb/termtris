@@ -10,7 +10,7 @@ bin = termtris.com
 
 #opt = -otexan
 #opt = -od
-#dbg = -d3
+dbg = -d3
 
 AS = nasm
 CC = wcc
