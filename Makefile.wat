@@ -10,18 +10,21 @@ bin = termtris.com
 
 #opt = -otexan
 #opt = -od
+#dbg = -d3
 
 AS = nasm
 CC = wcc
 LD = wlink
 ASFLAGS = -fobj
-CFLAGS = -d3 $(opt) $(inc) $(def) -ms -s -zq -bt=com $(incpath)
+CFLAGS = $(dbg) $(opt) $(inc) $(def) -ms -s -zq -bt=com $(incpath)
 LDFLAGS = option map $(libpath)
 
 $(bin): $(obj)
 	%write objects.lnk $(obj)
 	%write ldflags.lnk $(LDFLAGS)
-	$(LD) debug all name $@ system com file { @objects } @ldflags
+	$(LD) name $@ system com file { @objects } @ldflags
+
+#	$(LD) debug all name $@ system com file { @objects } @ldflags
 
 .c: src;src/dos
 .asm: src;src/dos
