@@ -1,8 +1,10 @@
 !ifdef __UNIX__
-obj = src/dos/main.obj src/dos/timer.obj src/dos/ansi.obj src/game.obj src/scoredb.obj
+obj = src/dos/main.obj src/dos/timer.obj src/dos/ansi.obj src/dos/scoredb.obj &
+	src/game.obj
 inc = -Isrc -Isrc/dos
 !else
-obj = src\dos\main.obj src\dos\timer.obj src\dos\ansi.obj src\game.obj src\scoredb.obj
+obj = src\dos\main.obj src\dos\timer.obj src\dos\ansi.obj src\dos\scoredb.obj &
+	src\game.obj
 inc = -Isrc -Isrc\dos
 !endif
 

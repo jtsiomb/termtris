@@ -31,6 +31,7 @@ void print_usage(const char *argv0);
 long get_msec(void);
 
 long timer_ticks;
+const char *progpath;
 
 /* defined in timer.asm */
 void init_timer(void);
@@ -104,6 +105,8 @@ void cleanup(void)
 int parse_args(int argc, char **argv)
 {
 	int i;
+
+	progpath = argv[0];
 
 	for(i=1; i<argc; i++) {
 		if(argv[i][0] == '-') {

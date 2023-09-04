@@ -34,26 +34,7 @@ int monochrome;
 int term_width, term_height;
 
 
-enum {
-	G_DIAMOND	= 0x04,
-	G_CHECKER	= 0xb1,
-	G_LR_CORNER	= 0xd9,
-	G_UR_CORNER	= 0xbf,
-	G_UL_CORNER	= 0xda,
-	G_LL_CORNER	= 0xc0,
-	G_CROSS		= 0xc5,
-	G_HLINE		= 0xc4,
-	G_L_TEE		= 0xc3,
-	G_R_TEE		= 0xb4,
-	G_B_TEE		= 0xc1,
-	G_T_TEE		= 0xc2,
-	G_VLINE		= 0xb3,
-	G_CDOT		= 0xf8
-};
-
 enum { ERASE_PIECE, DRAW_PIECE };
-
-enum { BLACK, BLUE, GREEN, CYAN, RED, MAGENTA, YELLOW, WHITE };
 
 /* dimensions of the whole screen */
 #define SCR_ROWS	20
@@ -75,6 +56,7 @@ static void update_cur_piece(void);
 static void addscore(int nlines);
 static void print_numbers(void);
 static void print_help(void);
+static void full_redraw(void);
 static int spawn(void);
 static int collision(int piece, const int *pos);
 static void stick(int piece, const int *pos);
@@ -84,7 +66,6 @@ static void drawbg(void);
 static void drawpf(void);
 static void draw_line(int row, int blink);
 static void wrtile(int tileid);
-static void wrstr(const char *s, int attr);
 
 
 static int pos[2], next_pos[2];
@@ -265,7 +246,6 @@ int init_game(void)
 	print_numbers();
 	print_help();
 	fflush(stdout);
-
 	return 0;
 }
 
@@ -310,6 +290,11 @@ long update(long msec)
 			return GAMEOVER_FILL_RATE;
 		}
 
+		if(score) {
+			save_score(score, lines, level);
+			full_redraw();
+			score = lines = level = 0;
+		}
 		return WAIT_INF;
 	}
 
@@ -395,15 +380,15 @@ static void print_numbers(void)
 
 	ansi_setcursor(term_yoffs + 3, term_xoffs + 14 * 2);
 	sprintf(buf, "%10ld", score);
-	wrstr(buf, 7);
+	ansi_putstr(buf, 7);
 
 	ansi_setcursor(term_yoffs + 7, term_xoffs + 17 * 2);
 	sprintf(buf, "%2ld", level);
-	wrstr(buf, 7);
+	ansi_putstr(buf, 7);
 
 	ansi_setcursor(term_yoffs + 10, term_xoffs + 14 * 2);
 	sprintf(buf, "%8ld", lines);
-	wrstr(buf, 7);
+	ansi_putstr(buf, 7);
 }
 
 static void print_help(void)
@@ -413,9 +398,9 @@ static void print_help(void)
 	for(i=0; i<sizeof helpstr/sizeof *helpstr; i++) {
 		ansi_setcursor(i + 1, 0);
 		if(!i || show_help) {
-			wrstr(helpstr[i], 0x70);
+			ansi_putstr(helpstr[i], 0x70);
 		} else {
-			wrstr("                     ", 0x70);
+			ansi_putstr("                     ", 0x70);
 		}
 	}
 }
@@ -562,9 +547,6 @@ void game_input(int c)
 
 	case 'p':
 		if(gameover) {
-			if(score) {
-				save_score(score, lines, level);
-			}
 			init_game();
 		} else {
 			pause ^= 1;
@@ -573,9 +555,6 @@ void game_input(int c)
 
 	case '\b':
 	case 127:
-		if(score) {
-			save_score(score, lines, level);
-		}
 		init_game();
 		break;
 
@@ -586,20 +565,26 @@ void game_input(int c)
 		break;
 
 	case '`':
-		drawbg();
-		print_numbers();
-		drawpf();
-		draw_piece(next_piece, preview_pos, 0, DRAW_PIECE);
-		if(!gameover) {
-			draw_piece(cur_piece, next_pos, cur_rot, DRAW_PIECE);
-		}
-		fflush(stdout);
+		full_redraw();
 		break;
 
 	default:
 		/*fprintf(stderr, "unhandled input: %x\n", c);*/
 		break;
 	}
+}
+
+static void full_redraw(void)
+{
+	drawbg();
+	print_numbers();
+	print_help();
+	drawpf();
+	if(!gameover) {
+		draw_piece(next_piece, preview_pos, 0, DRAW_PIECE);
+		draw_piece(cur_piece, next_pos, cur_rot, DRAW_PIECE);
+	}
+	fflush(stdout);
 }
 
 static int spawn(void)
@@ -772,13 +757,13 @@ static void drawbg(void)
 
 	ansi_setcursor(term_yoffs + 1, term_xoffs + 14 * 2);
 	ansi_setcolor(BLACK, WHITE);
-	wrstr("S C O R E", 7);
+	ansi_putstr("S C O R E", 7);
 
 	ansi_setcursor(term_yoffs + 6, term_xoffs + 14 * 2);
-	wrstr("L E V E L", 7);
+	ansi_putstr("L E V E L", 7);
 
 	ansi_setcursor(term_yoffs + 9, term_xoffs + 14 * 2);
-	wrstr("L I N E S", 7);
+	ansi_putstr("L I N E S", 7);
 }
 
 static void drawpf(void)
@@ -824,12 +809,5 @@ static void wrtile(int tileid)
 		unsigned char ca = c >> 8;
 
 		ansi_ibmchar(cc, ca);
-	}
-}
-
-static void wrstr(const char *s, int attr)
-{
-	while(*s) {
-		ansi_ibmchar(*s++, attr);
 	}
 }

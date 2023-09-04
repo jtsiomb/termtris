@@ -1,6 +1,6 @@
 /*
 Termtris - a tetris game for ANSI/VT220 terminals
-Copyright (C) 2019-2022  John Tsiombikas <nuclear@member.fsf.org>
+Copyright (C) 2019-2023  John Tsiombikas <nuclear@member.fsf.org>
 
 This program is free software: you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
@@ -22,15 +22,8 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 #include <ctype.h>
 #include <unistd.h>
 #include <fcntl.h>
-#include "scoredb.h"
-
-#if defined(unix) || defined(__unix) || defined(__APPLE__)
-#define __unix__ 1
-#endif
-
-#ifdef __unix__
 #include <pwd.h>
-#endif
+#include "scoredb.h"
 
 struct score_entry {
 	char *user;
@@ -55,7 +48,6 @@ int save_score(long score, long lines, long level)
 	struct score_entry *slist, *sptr;
 	struct score_entry newscore;
 
-#ifdef __unix__
 	struct passwd *pw;
 	struct flock flk;
 
@@ -64,9 +56,6 @@ int save_score(long score, long lines, long level)
 		return -1;
 	}
 	newscore.user = pw->pw_name;
-#else
-	newscore.user = "dosuser";
-#endif
 	newscore.score = score;
 	newscore.lines = lines;
 	newscore.level = level;
@@ -77,13 +66,11 @@ int save_score(long score, long lines, long level)
 		return -1;
 	}
 
-#ifdef __unix__
 	/* lock the file */
 	flk.l_type = F_WRLCK;
 	flk.l_start = flk.l_len = 0;
 	flk.l_whence = SEEK_SET;
 	while(fcntl(fd, F_SETLKW, &flk) == -1);
-#endif
 
 	slist = read_scores(fp);
 
@@ -104,13 +91,11 @@ int save_score(long score, long lines, long level)
 	}
 	fflush(fp);
 
-#ifdef __unix__
 	/* unlock the file */
 	flk.l_type = F_UNLCK;
 	flk.l_start = flk.l_len = 0;
 	flk.l_whence = SEEK_SET;
 	fcntl(fd, F_SETLK, &flk);
-#endif
 
 	free_list(slist);
 	fclose(fp);
@@ -203,21 +188,17 @@ int print_scores(int num)
 	FILE *fp;
 	char buf[128];
 	struct score_entry sc;
-#ifdef __unix__
 	struct flock flk;
-#endif
 
 	if(!(fp = fopen(SCOREDB_PATH, "rb"))) {
 		fprintf(stderr, "no high-scores found\n");
 		return -1;
 	}
 
-#ifdef __unix__
 	flk.l_type = F_RDLCK;
 	flk.l_start = flk.l_len = 0;
 	flk.l_whence = SEEK_SET;
 	while(fcntl(fileno(fp), F_SETLKW, &flk) == -1);
-#endif
 
 	for(i=0; i<num; i++) {
 		if(!fgets(buf, sizeof buf, fp)) break;
@@ -228,12 +209,10 @@ int print_scores(int num)
 		printf("%2d. %s - %ld pts  (%ld lines)\n", i + 1, sc.user, sc.score, sc.lines);
 	}
 
-#ifdef __unix__
 	flk.l_type = F_UNLCK;
 	flk.l_start = flk.l_len = 0;
 	flk.l_whence = SEEK_SET;
 	fcntl(fileno(fp), F_SETLK, &flk);
-#endif
 
 	fclose(fp);
 	return 0;

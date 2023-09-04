@@ -138,3 +138,10 @@ void ansi_ibmchar(unsigned char c, unsigned char attr)
 
 	fputs(cmd, stdout);
 }
+
+void ansi_putstr(const char *s, unsigned char attr)
+{
+	while(*s) {
+		ansi_ibmchar(*s++, attr);
+	}
+}

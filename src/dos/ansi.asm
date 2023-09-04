@@ -92,5 +92,19 @@ ansi_ibmchar_:
 	pop cx
 	pop bx
 	ret
+
+	global ansi_putstr_
+ansi_putstr_:
+	push si
+	mov si, ax
+.top:	lodsb
+	test al, al
+	jz .done
+	push dx
+	call ansi_ibmchar_
+	pop dx
+	jmp .top
+.done:	pop si
+	ret
 	
 	; vi:ft=nasm ts=8 sts=8 sw=8:
