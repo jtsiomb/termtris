@@ -1,4 +1,3 @@
-
 /*
 Termtris - a tetris game for ANSI/VT220 terminals
 Copyright (C) 2019-2023  John Tsiombikas <nuclear@member.fsf.org>
@@ -34,14 +33,14 @@ struct score_entry {
 };
 
 #define NUM_SCORES	10
-static struct score_entry scores[NUM_SCORES];
+static struct score_entry scores[NUM_SCORES] = {{"\0dummy"}};
 
 
 int save_score(long score, long lines, long level)
 {
 	int i, rest;
 	FILE *fp;
-	long offs;
+	unsigned long offs;
 
 	for(i=0; i<NUM_SCORES; i++) {
 		if(!*scores[i].user || score > scores[i].score) {
@@ -66,7 +65,7 @@ int save_score(long score, long lines, long level)
 
 
 	/* save the new scores table */
-	offs = (long)scores - 256;
+	offs = ((long)scores - 256) & 0xffff;
 
 	if(!(fp = fopen(progpath, "r+b"))) {
 		return -1;
@@ -81,10 +80,14 @@ int print_scores(int num)
 {
 	int i;
 	struct score_entry *sc = scores;
+	/*unsigned long offs = ((long)scores - 256) & 0xffff;
+
+	printf("calculated offset %lx (from: %p)\n", offs, (void*)scores);
+	printf("actual address: %p\n", (void*)scores);*/
 
 	for(i=0; i<NUM_SCORES; i++) {
 		if(!*sc->user) break;
-		
+
 		printf("%2d. %s - %ld pts  (%ld lines)\n", i + 1, sc->user, sc->score,
 				sc->lines);
 		sc++;
@@ -159,7 +162,7 @@ static int name_dialog(char *buf)
 				buf[cur] = 0;
 			}
 		}
-		
+
 		s = buf;
 		ansi_setcursor(9, DLG_X + 1);
 		for(i=0; i<DLG_W-2; i++) {
