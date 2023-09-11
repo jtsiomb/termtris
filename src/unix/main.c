@@ -26,6 +26,7 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 #include <sys/stat.h>
 #include <sys/select.h>
 #include <sys/time.h>
+#include <sys/ioctl.h>
 #include "game.h"
 #include "scoredb.h"
 
