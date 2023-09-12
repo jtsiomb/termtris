@@ -3,6 +3,7 @@ Termtris - tetris game for ANSI/VT220 terminals
 
 ![shot](http://nuclear.mutantstargoat.com/sw/termtris/img/termtris_shot-thumb.png)
 ![vt420](http://nuclear.mutantstargoat.com/sw/termtris/img/termtris_vt420-thumb.jpg)
+![vt420 graphical blocks](http://nuclear.mutantstargoat.com/sw/termtris/img/termtris_vt420_softcharset-thumb.jpg)
 
 About
 -----
@@ -34,6 +35,7 @@ Controls
   - `P` pauses and unpauses the game.
   - *backspace*, or *delete* starts a new game.
   - `Q` or hitting escape twice, quits immediately.
+  - `H` shows or hides the help panel which lists these keybindings.
 
 Additionally on GNU/Linux systems any joystick can be used to control the game.
 The first available joystick is used automatically, or you can specify a
@@ -45,6 +47,19 @@ and unpause.
 
 There is no way to remap the controls without changing the source code at this
 time.
+
+Custom character set
+--------------------
+For terminals with support for custom loadable character sets, you can instruct
+termtris to use graphical blocks instead of the bracket characters with the `-g`
+or `-G` command-line arguments.
+
+This is an new experimental feature, and for now `-g` enables the use of
+VT220-compatible block replacment characters, which are not very nice, while
+`-G` enables the use of larger VT420 block characters which give a nice bevelled
+3D look to the blocks. At some point terminal capability detection will be
+implemented which will make it possible to use a single switch to enable
+graphical blocks, and the size and format will be determined automatically.
 
 License
 -------
