@@ -67,9 +67,13 @@ static const char *sixels7x10[] = {
 	"~~@@@pH/NNGGGGH",
 	"Hp@@@~~/HGGGGNN"
 };
-static const char *sixels10x16[] = {
+/*static const char *sixels10x16[] = {
 	"~~@@@@@@@`/~~?????EHO/NNGGGGGGGG",
 	"`@@@@@@@~~/OHE?????~~/GGGGGGGGNN"
+};*/
+static const char *sixels10x16[] = {
+	"~~f^jVzf^j/~~mXfYtmjY/FFDAHBGBAH",
+	"VZvNzfZvR@/d\\jTyTmtGA/AHB@IBGB?A"
 };
 static char custom_char[] = {"[]"};
 #define NUM_CUSTOM	(sizeof sixels7x10 / sizeof *sixels7x10)
