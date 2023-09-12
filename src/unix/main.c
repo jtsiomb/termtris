@@ -26,6 +26,7 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 #include <sys/stat.h>
 #include <sys/select.h>
 #include <sys/time.h>
+#include <sys/ioctl.h>
 #include "game.h"
 #include "scoredb.h"
 
@@ -238,6 +239,13 @@ int parse_args(int argc, char **argv)
 #endif
 					break;
 
+				case 'g':
+					custom = 1;
+					break;
+				case 'G':
+					custom = 2;
+					break;
+
 				case 's':
 					printf("High Scores\n-----------\n");
 					print_scores(10);
@@ -276,6 +284,8 @@ void print_usage(const char *argv0)
 #ifdef USE_JOYSTICK
 	printf(" -j <dev>: use joystick device for input\n");
 #endif
+	printf(" -g: use custom block graphics (VT220)\n");
+	printf(" -G: use custom block graphics (VT420)\n");
 	printf(" -s: print top 10 high-scores and exit\n");
 	printf(" -h: print usage information and exit\n\n");
 

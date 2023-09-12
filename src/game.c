@@ -190,6 +190,7 @@ int init_game(void)
 	prev_piece = 0;
 	next_piece = rand() % NUM_PIECES;
 
+	ansi_init();
 	ansi_setcolor(WHITE, BLACK);
 	ansi_clearscr();
 	ansi_cursor(0);

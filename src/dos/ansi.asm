@@ -3,6 +3,10 @@
 
 segment _TEXT class=CODE
 
+	global ansi_init_
+ansi_init_:
+	ret
+
 	global ansi_reset_
 	global ansi_clearscr_
 ansi_reset_:

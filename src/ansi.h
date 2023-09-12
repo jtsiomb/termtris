@@ -37,6 +37,7 @@ enum {
 
 enum { BLACK, BLUE, GREEN, CYAN, RED, MAGENTA, YELLOW, WHITE };
 
+void ansi_init(void);
 
 void ansi_reset(void);
 void ansi_clearscr(void);

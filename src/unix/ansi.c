@@ -1,6 +1,6 @@
 /*
 Termtris - a tetris game for ANSI/VT220 terminals
-Copyright (C) 2019-2022  John Tsiombikas <nuclear@member.fsf.org>
+Copyright (C) 2019-2023  John Tsiombikas <nuclear@member.fsf.org>
 
 This program is free software: you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
@@ -19,10 +19,7 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 #include <string.h>
 #include "game.h"
 
-enum {
-	CS_ASCII = 'B',
-	CS_GRAPH = '0'
-};
+enum { CS_ASCII, CS_GRAPH, CS_CUSTOM };
 
 #define GMAP_FIRST	0xb0
 #define GMAP_LAST	0xda
@@ -64,6 +61,41 @@ static unsigned char cmap[] = {0, 4, 2, 6, 1, 5, 3, 7};
 
 static unsigned char cur_attr = 0xff;
 static int cur_cs = CS_ASCII;
+
+int custom;
+static const char *sixels7x10[] = {
+	"~~@@@pH/NNGGGGH",
+	"Hp@@@~~/HGGGGNN"
+};
+static const char *sixels10x16[] = {
+	"~~@@@@@@@`/~~?????EHO/NNGGGGGGGG",
+	"`@@@@@@@~~/OHE?????~~/GGGGGGGGNN"
+};
+static char custom_char[] = {"[]"};
+#define NUM_CUSTOM	(sizeof sixels7x10 / sizeof *sixels7x10)
+
+void ansi_init(void)
+{
+	int i;
+
+	if(custom) {
+		/* upload custom character set */
+		printf("Uploading custom character set ... ");
+		fflush(stdout);
+		for(i=0; i<NUM_CUSTOM; i++) {
+			if(custom < 2) {
+				/* VT220 mode, 7x10 */
+				printf("\033P1;%d;1;4;0;2{ @%s\033\\", (int)custom_char[i] - 32,
+						sixels7x10[i]);
+			} else {
+				/* VT420 mode, 10x16 */
+				printf("\033P1;%d;1;10;0;2{ @%s\033\\", (int)custom_char[i] - 32,
+						sixels10x16[i]);
+			}
+		}
+		printf("done\n");
+	}
+}
 
 void ansi_recall(void)
 {
@@ -110,15 +142,21 @@ void ansi_ibmchar(unsigned char c, unsigned char attr)
 	char *ptr = cmd;
 
 	if(c >= GMAP_FIRST && c <= GMAP_LAST) {
-		if(cur_cs == CS_ASCII) {
+		if(cur_cs != CS_GRAPH) {
 			memcpy(ptr, "\033(0", 3);
 			ptr += 3;
 			cur_cs = CS_GRAPH;
 		}
 
 		c = gmap[c - GMAP_FIRST];
+	} else if(custom && (c == '[' || c == ']')) {
+		if(cur_cs != CS_CUSTOM) {
+			memcpy(ptr, "\033( @", 4);
+			ptr += 4;
+			cur_cs = CS_CUSTOM;
+		}
 	} else {
-		if(cur_cs == CS_GRAPH) {
+		if(cur_cs != CS_ASCII) {
 			memcpy(ptr, "\033(B", 3);
 			ptr += 3;
 			cur_cs = CS_ASCII;
