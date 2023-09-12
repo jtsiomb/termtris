@@ -3,6 +3,7 @@
 *.swp
 *.log
 termtris
+fontconv
 
 *.obj
 *.OBJ
