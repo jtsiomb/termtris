@@ -28,6 +28,7 @@ int main(int argc, char **argv)
 enum {
 	FONT_7X10	= 0x70a,
 	FONT_10X16	= 0xa10,
+	FONT_15X12	= 0xf0c,
 };
 
 int proc_font(const char *fname)
@@ -60,7 +61,7 @@ int proc_font(const char *fname)
 				goto end;
 			}
 			fontsz = (width << 8) | height;
-			if(fontsz != FONT_7X10 && fontsz != FONT_10X16) {
+			if(fontsz != FONT_7X10 && fontsz != FONT_10X16 && fontsz != FONT_15X12) {
 				fprintf(stderr, "unknown font size: %dx%d\n", width, height);
 				goto end;
 			}
@@ -107,8 +108,12 @@ void glyph_to_sixel(int glyph[MAX_ROWS][MAX_COLS], int width, int height, int cn
 		printf("\\033P1;%d;1;4{ @", cnum - 32);
 		break;
 
+	case FONT_15X12:
+		printf("\\033P1;%d;1;15;0;2;12{ @", cnum - 32);
+		break;
+
 	case FONT_10X16:
-		printf("\\033P1;%d;1;10;0;2;20{ @", cnum - 32);
+		printf("\\033P1;%d;1;10;0;2;16{ @", cnum - 32);
 		break;
 
 	default:

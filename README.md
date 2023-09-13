@@ -23,6 +23,7 @@ to that version gameplay-wise.
   - website: http://nuclear.mutantstargoat.com/sw/termtris
   - source repository: https://github.com/jtsiomb/termtris
 
+
 Controls
 --------
   - `A` or *left arrow* moves the block left.
@@ -46,18 +47,20 @@ and unpause.
 There is no way to remap the controls without changing the source code at this
 time.
 
+
 Custom character set
 --------------------
 For terminals with support for custom loadable character sets, you can instruct
 termtris to use graphical blocks instead of the bracket characters with the `-g`
-or `-G` command-line arguments.
+command-line argument.
 
-This is an new experimental feature, and for now `-g` enables the use of
-VT220-compatible block replacment characters, which are not very nice, while
-`-G` enables the use of larger VT420 block characters which give a nice bevelled
-3D look to the blocks. At some point terminal capability detection will be
-implemented which will make it possible to use a single switch to enable
-graphical blocks, and the size and format will be determined automatically.
+Different terminals have different capabilities when it comes to soft character
+sets. Termtris will try to detect the terminal type and choose the correct soft
+font to load, but if it fails or you want to force a different terminal type,
+make sure to define the `TERM` environent variable. If `TERM` is undefined, or
+an unknown or unsupported terminal type, termtris will try to interrogate the
+terminal itself about its capabilities.
+
 
 License
 -------
@@ -67,6 +70,7 @@ This program is free software. Feel free to use, modify, and/or redistribute it
 under the terms of the GNU General Public License version 3, or at your option,
 any later version published by the Free Software Foundation. See COPYING for
 details.
+
 
 Download
 --------
@@ -82,6 +86,7 @@ choice, but please do not submit any bug reports without first trying to build
 termtris yourself from the latest git source code.
   - Debian/Ubuntu/Mint: `apt-get install termtris`
 
+
 Build (UNIX)
 ------------
 There are no external dependencies. Simply type `make` to build, and `make
@@ -92,6 +97,7 @@ Default installation prefix is `/usr/local`. Change the first line of the
 rule like so:
 
     make PREFIX=/some/other/prefix install
+
 
 Build (DOS)
 -----------

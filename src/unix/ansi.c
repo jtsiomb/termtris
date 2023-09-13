@@ -16,7 +16,9 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <https://www.gnu.org/licenses/>.
 */
 #include <stdio.h>
+#include <stdlib.h>
 #include <string.h>
+#include <ctype.h>
 #include "game.h"
 
 enum { CS_ASCII, CS_GRAPH, CS_CUSTOM };
@@ -67,33 +69,61 @@ static const char *sixels7x10[] = {
 	"~~@@@pH/NNGGGGH",
 	"Hp@@@~~/HGGGGNN"
 };
-/*static const char *sixels10x16[] = {
-	"~~@@@@@@@`/~~?????EHO/NNGGGGGGGG",
-	"`@@@@@@@~~/OHE?????~~/GGGGGGGGNN"
-};*/
 static const char *sixels10x16[] = {
 	"~~f^jVzf^j/~~mXfYtmjY/FFDAHBGBAH",
 	"VZvNzfZvR@/d\\jTyTmtGA/AHB@IBGB?A"
+};
+static const char *sixels15x12[] = {
+	"~~JtJdZdJt~~dYd/~~TITIDYDQ^^IDI",
+	"tJdZdJtJdZYdQlQ/QLQDYDQLQHHEHAL"
 };
 static char custom_char[] = {"[]"};
 #define NUM_CUSTOM	(sizeof sixels7x10 / sizeof *sixels7x10)
 
 void ansi_init(void)
 {
-	int i;
+	int i, val, vtclass = -1;
+	char buf[64], *env;
 
 	if(custom) {
+		/* detect the terminal type */
+		/* if there is a TERM env var with "vtxxx" where xxx >= 200, heed that */
+		if((env = getenv("TERM")) && tolower(env[0]) == 'v' && tolower(env[1]) == 't'
+				&& (val = atoi(env + 2)) >= 200 && val < 999) {
+			vtclass = 60 + val / 100;
+		} else {
+			/* otherwise try asking for the device attributes string */
+			printf("\033[c\n");
+			fflush(stdout);
+			if(fgets(buf, sizeof buf, stdin) && sscanf(buf, "\033[?%d", &val) == 1) {
+				vtclass = val;
+			}
+
+		}
+		if(vtclass == -1) {
+			vtclass = 64;	/* default to VT420 */
+		}
+
+
 		/* upload custom character set */
-		printf("Uploading custom character set ... ");
+		printf("Uploading custom character set (VT%dx0) ... ", vtclass);
 		fflush(stdout);
 		for(i=0; i<NUM_CUSTOM; i++) {
-			if(custom < 2) {
+			switch(vtclass) {
+			case 62:
 				/* VT220 mode, 7x10 */
 				printf("\033P1;%d;1;4;0;2{ @%s\033\\", (int)custom_char[i] - 32,
 						sixels7x10[i]);
-			} else {
+				break;
+			case 63:
+				/* VT320 mode, 15x12 */
+				printf("\033P1;%d;1;15;0;2;12{ @%s\033\\", (int)custom_char[i] - 32,
+						sixels15x12[i]);
+				break;
+			case 64:
+			default:
 				/* VT420 mode, 10x16 */
-				printf("\033P1;%d;1;10;0;2{ @%s\033\\", (int)custom_char[i] - 32,
+				printf("\033P1;%d;1;10;0;2;16{ @%s\033\\", (int)custom_char[i] - 32,
 						sixels10x16[i]);
 			}
 		}

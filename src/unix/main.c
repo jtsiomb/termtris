@@ -240,10 +240,8 @@ int parse_args(int argc, char **argv)
 					break;
 
 				case 'g':
-					custom = 1;
-					break;
 				case 'G':
-					custom = 2;
+					custom = 1;
 					break;
 
 				case 's':
@@ -284,8 +282,7 @@ void print_usage(const char *argv0)
 #ifdef USE_JOYSTICK
 	printf(" -j <dev>: use joystick device for input\n");
 #endif
-	printf(" -g: use custom block graphics (VT220)\n");
-	printf(" -G: use custom block graphics (VT420)\n");
+	printf(" -g: use custom block graphics\n");
 	printf(" -s: print top 10 high-scores and exit\n");
 	printf(" -h: print usage information and exit\n\n");
 
