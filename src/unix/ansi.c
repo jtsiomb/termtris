@@ -64,7 +64,6 @@ static unsigned char cmap[] = {0, 4, 2, 6, 1, 5, 3, 7};
 static unsigned char cur_attr = 0xff;
 static int cur_cs = CS_ASCII;
 
-int custom;
 static const char *sixels7x10[] = {
 	"~~@@@pH/NNGGGGH",
 	"Hp@@@~~/HGGGGNN"
@@ -85,7 +84,7 @@ void ansi_init(void)
 	int i, val, vtclass = -1;
 	char buf[64], *env;
 
-	if(custom) {
+	if(use_gfxchar) {
 		/* detect the terminal type */
 		/* if there is a TERM env var with "vtxxx" where xxx >= 200, heed that */
 		if((env = getenv("TERM")) && tolower(env[0]) == 'v' && tolower(env[1]) == 't'
@@ -106,7 +105,7 @@ void ansi_init(void)
 
 
 		/* upload custom character set */
-		printf("Uploading custom character set (VT%dx0) ... ", vtclass);
+		printf("Uploading custom character set (VT%dx0) ... ", vtclass % 10);
 		fflush(stdout);
 		for(i=0; i<NUM_CUSTOM; i++) {
 			switch(vtclass) {
@@ -183,7 +182,7 @@ void ansi_ibmchar(unsigned char c, unsigned char attr)
 		}
 
 		c = gmap[c - GMAP_FIRST];
-	} else if(custom && (c == '[' || c == ']')) {
+	} else if(use_gfxchar && (c == '[' || c == ']')) {
 		if(cur_cs != CS_CUSTOM) {
 			memcpy(ptr, "\033( @", 4);
 			ptr += 4;

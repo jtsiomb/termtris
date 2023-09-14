@@ -31,6 +31,7 @@ int quit;
 long tick_interval;
 int use_bell;
 int monochrome;
+int use_gfxchar;
 int term_width, term_height;
 
 
@@ -256,7 +257,10 @@ void cleanup_game(void)
 		save_score(score, lines, level);
 	}
 	ansi_reset();
+#if !defined(MSDOS) && !defined(__COM__)
+	/* don't call this on DOS because it will call ansi_init again */
 	ansi_clearscr();
+#endif
 }
 
 #define BLINK_UPD_RATE	100
@@ -808,6 +812,11 @@ static void wrtile(int tileid)
 		uint16_t c = tiles[tileid][i];
 		unsigned char cc = c & 0xff;
 		unsigned char ca = c >> 8;
+
+		if(use_gfxchar && (cc == '[' || cc == ']')) {
+			ca <<= 4;	/* for gfx blocks bg->fg and bg=0 */
+			if(!ca) ca = 0x80;	/* special case for T which has black bg */
+		}
 
 		ansi_ibmchar(cc, ca);
 	}

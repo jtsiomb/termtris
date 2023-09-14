@@ -3,20 +3,49 @@
 
 segment _TEXT class=CODE
 
+	extern _monochrome
+	extern _use_gfxchar
+
 	global ansi_init_
 ansi_init_:
-	ret
+	mov ax, [_use_gfxchar]
+	test ax, ax
+	jz .end
+
+	push bx
+	push cx
+	push dx
+	push bp
+	push es
+
+	mov bx, 1000h	; 16 bytes per char, load block 0
+	mov cx, 3	; load 3 chars: [ \ ]
+	mov dx, 0dbh	; load at graphics range to dup last column (set bit 7)
+	mov ax, cs
+	mov es, ax
+	mov bp, glyphs
+	mov ax, 1110h	; user alpha load
+	int 10h
+
+	pop es
+	pop bp
+	pop dx
+	pop cx
+	pop bx
+.end:	ret
 
 	global ansi_reset_
-	global ansi_clearscr_
 ansi_reset_:
-ansi_clearscr_:
 	mov ax, 0f00h
 	int 10h
 	xor ah, ah
 	int 10h
 	ret
 
+	global ansi_clearscr_
+ansi_clearscr_:
+	call ansi_reset_
+	jmp ansi_init_
 
 	global ansi_cursor_
 ansi_cursor_:
@@ -39,7 +68,7 @@ ansi_cursor_:
 	pop cx
 	pop bx
 	ret
-	
+
 
 	global ansi_setcursor_
 ansi_setcursor_:
@@ -74,12 +103,20 @@ advcursor:
 	int 10h
 	ret
 
-	extern _monochrome
-	
+
 	global ansi_ibmchar_
 ansi_ibmchar_:
 	push bx
 	push cx
+	; if it's [ or ], set bit 7 to use the graphic blocks
+	cmp word [_use_gfxchar], 0
+	jz .noremap
+	cmp al, 5bh
+	jz .remap
+	cmp al, 5dh
+	jnz .noremap
+.remap: or al, 80h
+.noremap:
 	mov ah, 9
 	mov bx, 7
 	cmp word [_monochrome], 0
@@ -110,5 +147,42 @@ ansi_putstr_:
 	jmp .top
 .done:	pop si
 	ret
-	
+
+glyphs:
+	db 0xff	; #### ####
+	db 0xff	; #### ####
+	db 0xf5	; #### .#.#
+	db 0xda	; ##.# #.#.
+	db 0xd6	; ##.# .##.
+	db 0xeb	; ###. #.##
+	db 0xda	; ##.# #.#.
+	db 0xed	; ###. ##.#
+	db 0xeb	; ###. #.##
+	db 0xf5	; #### .#.#
+	db 0xd6	; ##.# .##.
+	db 0xeb	; ###. #.##
+	db 0xed	; ###. ##.#
+	db 0xd5	; ##.# .#.#
+	db 0xe0	; ###. ....
+	db 0x0a	; .... #.#.
+
+	times 16 db 0
+
+	db 0xff	; #### ####
+	db 0xfe	; #### ###.
+	db 0xd4	; ##.# .#..
+	db 0x68	; .##. #...
+	db 0xae	; #.#. ###.
+	db 0xb4	; #.## .#..
+	db 0xd4	; ##.# .#..
+	db 0xa9	; #.#. #..#
+	db 0x5c	; .#.# ##..
+	db 0xaa	; #.#. #.#.
+	db 0x74	; .### .#..
+	db 0xac	; #.#. ##..
+	db 0xd4	; ##.# .#..
+	db 0xb5	; #.## .#.#
+	db 0x00	; .... ....
+	db 0x28	; ..#. #...
+
 	; vi:ft=nasm ts=8 sts=8 sw=8:

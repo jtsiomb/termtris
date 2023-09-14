@@ -241,7 +241,7 @@ int parse_args(int argc, char **argv)
 
 				case 'g':
 				case 'G':
-					custom = 1;
+					use_gfxchar = 1;
 					break;
 
 				case 's':

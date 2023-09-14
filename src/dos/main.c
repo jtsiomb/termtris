@@ -116,6 +116,13 @@ int parse_args(int argc, char **argv)
 					monochrome = 1;
 					break;
 
+				case 'g':
+					use_gfxchar = 1;
+					break;
+				case 't':
+					use_gfxchar = 0;
+					break;
+
 				case 's':
 					printf("High Scores\n-----------\n");
 					print_scores(10);
@@ -149,6 +156,8 @@ void print_usage(const char *argv0)
 	printf("Usage: %s [options]\n", argv0);
 	printf("Options:\n");
 	printf(" -m: monochrome output (default: off)\n");
+	printf(" -g: use graphical blocks (default: EGA/VGA)\n");
+	printf(" -t: use text blocks (default: MDA/CGA)\n");
 	printf(" -s: print top 10 high-scores and exit\n");
 	printf(" -h: print usage information and exit\n\n");
 

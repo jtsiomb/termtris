@@ -22,7 +22,7 @@ extern int quit;
 extern long tick_interval;
 extern int use_bell;
 extern int monochrome;
-extern int custom;
+extern int use_gfxchar;
 
 extern int term_width, term_height;
 
