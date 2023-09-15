@@ -3,6 +3,8 @@
 
 segment _TEXT class=CODE
 
+%include "video.inc"
+
 	extern _monochrome
 	extern _use_gfxchar
 
@@ -18,12 +20,18 @@ ansi_init_:
 	push bp
 	push es
 
-	mov bx, 1000h	; 16 bytes per char, load block 0
-	mov cx, 3	; load 3 chars: [ \ ]
-	mov dx, 0dbh	; load at graphics range to dup last column (set bit 7)
 	mov ax, cs
 	mov es, ax
-	mov bp, glyphs
+	cmp word [vidtype], VIDTYPE_VGA
+	jz .vga
+	mov bp, glyphs_ega
+	mov bx, 0e00h	; 14 bytes per char, load block 0
+	jmp .skipvga
+.vga:	mov bp, glyphs_vga
+	mov bx, 1000h	; 16 bytes per char, load block 0
+.skipvga:
+	mov cx, 3	; load 3 chars: [ \ ]
+	mov dx, 0dbh	; load at graphics range to dup last column (set bit 7)
 	mov ax, 1110h	; user alpha load
 	int 10h
 
@@ -148,41 +156,74 @@ ansi_putstr_:
 .done:	pop si
 	ret
 
-glyphs:
-	db 0xff	; #### ####
-	db 0xff	; #### ####
-	db 0xf5	; #### .#.#
-	db 0xda	; ##.# #.#.
-	db 0xd6	; ##.# .##.
-	db 0xeb	; ###. #.##
-	db 0xda	; ##.# #.#.
-	db 0xed	; ###. ##.#
-	db 0xeb	; ###. #.##
-	db 0xf5	; #### .#.#
-	db 0xd6	; ##.# .##.
-	db 0xeb	; ###. #.##
-	db 0xed	; ###. ##.#
-	db 0xd5	; ##.# .#.#
-	db 0xe0	; ###. ....
-	db 0x0a	; .... #.#.
+glyphs_vga:
+	db 0xff
+	db 0xff
+	db 0xf5
+	db 0xda
+	db 0xd6
+	db 0xeb
+	db 0xda
+	db 0xed
+	db 0xeb
+	db 0xf5
+	db 0xd6
+	db 0xeb
+	db 0xed
+	db 0xd5
+	db 0xe0
+	db 0x08
 
 	times 16 db 0
 
-	db 0xff	; #### ####
-	db 0xfe	; #### ###.
-	db 0xd4	; ##.# .#..
-	db 0x68	; .##. #...
-	db 0xae	; #.#. ###.
-	db 0xb4	; #.## .#..
-	db 0xd4	; ##.# .#..
-	db 0xa9	; #.#. #..#
-	db 0x5c	; .#.# ##..
-	db 0xaa	; #.#. #.#.
-	db 0x74	; .### .#..
-	db 0xac	; #.#. ##..
-	db 0xd4	; ##.# .#..
-	db 0xb5	; #.## .#.#
-	db 0x00	; .... ....
-	db 0x28	; ..#. #...
+	db 0xff
+	db 0xfe
+	db 0x6a
+	db 0xb4
+	db 0xd6
+	db 0x5a
+	db 0xea
+	db 0x54
+	db 0xae
+	db 0xd4
+	db 0xba
+	db 0x56
+	db 0xea
+	db 0x5a
+	db 0x00
+	db 0x84
+
+glyphs_ega:
+	db 0xff
+	db 0xff
+	db 0xf5
+	db 0xd6
+	db 0xeb
+	db 0xda
+	db 0xed
+	db 0xeb
+	db 0xf5
+	db 0xd6
+	db 0xed
+	db 0xd5
+	db 0xe0
+	db 0x08
+
+	times 14 db 0
+
+	db 0xff
+	db 0xfe
+	db 0x6a
+	db 0xd6
+	db 0x5a
+	db 0xea
+	db 0x54
+	db 0xae
+	db 0xd4
+	db 0xba
+	db 0xea
+	db 0x5a
+	db 0x00
+	db 0x84
 
 	; vi:ft=nasm ts=8 sts=8 sw=8:

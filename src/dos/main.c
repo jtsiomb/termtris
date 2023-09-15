@@ -33,6 +33,9 @@ long get_msec(void);
 long timer_ticks;
 const char *progpath;
 
+/* defined in video.asm */
+void detect_video(void);
+
 /* defined in timer.asm */
 void init_timer(void);
 void cleanup_timer(void);
@@ -43,6 +46,8 @@ int main(int argc, char **argv)
 	int i, res, maxfd;
 	long msec, next;
 	int key;
+
+	detect_video();
 
 	if(parse_args(argc, argv) == -1) {
 		return 1;

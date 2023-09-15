@@ -10,6 +10,7 @@
 
 int proc_font(const char *fname);
 void glyph_to_sixel(int glyph[MAX_ROWS][MAX_COLS], int width, int height, int cnum);
+void glyph_to_asm(int glyph[MAX_ROWS][MAX_COLS], int width, int height, int cnum);
 char *clean_line(char *s);
 
 int main(int argc, char **argv)
@@ -26,17 +27,24 @@ int main(int argc, char **argv)
 }
 
 enum {
-	FONT_7X10	= 0x70a,
-	FONT_10X16	= 0xa10,
-	FONT_15X12	= 0xf0c,
+	FONT_7X10_VT2	= 0x70a,
+	FONT_15X12_VT3	= 0xf0c,
+	FONT_10X16_VT4	= 0xa10,
+	FONT_8X14_EGA	= 0x80e,
+	FONT_8X16_VGA	= 0x810
 };
+
+#define FONT_VALID(x)	((x) == FONT_7X10_VT2 || (x) == FONT_10X16_VT4 || \
+		(x) == FONT_15X12_VT3 || (x) == FONT_8X14_EGA || (x) == FONT_8X16_VGA)
+#define FONT_IS_VT(x)	(!FONT_IS_PC(x))
+#define FONT_IS_PC(x)	(((x) >> 8) == 8)
 
 int proc_font(const char *fname)
 {
 	FILE *fp;
 	char buf[256];
 	char *line;
-	int i, state, fontsz, cury, res = -1;
+	int i, state, fontsz, cury, count, tmp, res = -1;
 	int glyph[MAX_ROWS][10] = {0};
 	int width, height, cnum;
 
@@ -45,6 +53,7 @@ int proc_font(const char *fname)
 		return -1;
 	}
 
+	cnum = 0x20;
 	state = 0;
 	while(fgets(buf, sizeof buf, fp)) {
 		if(!(line = clean_line(buf)) || !*line) {
@@ -52,17 +61,22 @@ int proc_font(const char *fname)
 		}
 		switch(state) {
 		case 0:
-			if(sscanf(line, "glyph %dx%d %i", &width, &height, &cnum) != 3) {
+			if((count = sscanf(line, "glyph %dx%d %i", &width, &height, &tmp)) < 2) {
 				fprintf(stderr, "invalid syntax: %s\n", line);
 				goto end;
 			}
-			if(cnum <= 0x20 || cnum >= 0xff) {
-				fprintf(stderr, "invalid char num: %d\n", cnum);
-				goto end;
+			if(count >= 3) {
+				cnum = tmp;
+			} else {
+				cnum++;
 			}
 			fontsz = (width << 8) | height;
-			if(fontsz != FONT_7X10 && fontsz != FONT_10X16 && fontsz != FONT_15X12) {
+			if(!FONT_VALID(fontsz)) {
 				fprintf(stderr, "unknown font size: %dx%d\n", width, height);
+				goto end;
+			}
+			if(FONT_IS_VT(fontsz) && (cnum <= 0x20 || cnum >= 0xff)) {
+				fprintf(stderr, "invalid char num: %d\n", cnum);
 				goto end;
 			}
 			cury = 0;
@@ -81,7 +95,11 @@ int proc_font(const char *fname)
 				}
 			}
 			if(++cury >= height) {
-				glyph_to_sixel(glyph, width, height, cnum);
+				if(FONT_IS_VT(fontsz)) {
+					glyph_to_sixel(glyph, width, height, cnum);
+				} else {
+					glyph_to_asm(glyph, width, height, cnum);
+				}
 				state = 0;
 			}
 			break;
@@ -104,15 +122,15 @@ void glyph_to_sixel(int glyph[MAX_ROWS][MAX_COLS], int width, int height, int cn
 
 	fontsz = (width << 8) | height;
 	switch(fontsz) {
-	case FONT_7X10:
+	case FONT_7X10_VT2:
 		printf("\\033P1;%d;1;4{ @", cnum - 32);
 		break;
 
-	case FONT_15X12:
+	case FONT_15X12_VT3:
 		printf("\\033P1;%d;1;15;0;2;12{ @", cnum - 32);
 		break;
 
-	case FONT_10X16:
+	case FONT_10X16_VT4:
 		printf("\\033P1;%d;1;10;0;2;16{ @", cnum - 32);
 		break;
 
@@ -135,6 +153,23 @@ void glyph_to_sixel(int glyph[MAX_ROWS][MAX_COLS], int width, int height, int cn
 	}
 
 	printf("\\033\\\\\n");
+}
+
+void glyph_to_asm(int glyph[MAX_ROWS][MAX_COLS], int width, int height, int cnum)
+{
+	int i, j;
+	unsigned int bits;
+
+	printf("glyph_%02xh:\n", (unsigned int)cnum);
+
+	for(i=0; i<height; i++) {
+		bits = 0;
+		for(j=0; j<width; j++) {
+			bits = (bits << 1) | glyph[i][j];
+		}
+		printf("\tdb 0x%02x\n", bits);
+	}
+	putchar('\n');
 }
 
 char *clean_line(char *s)

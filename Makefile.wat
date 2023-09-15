@@ -1,10 +1,10 @@
 !ifdef __UNIX__
-obj = src/dos/main.obj src/dos/timer.obj src/dos/ansi.obj src/dos/scoredb.obj &
-	src/game.obj
+obj = src/dos/main.obj src/dos/timer.obj src/dos/ansi.obj src/dos/video.obj &
+	src/dos/scoredb.obj src/game.obj
 inc = -Isrc -Isrc/dos
 !else
-obj = src\dos\main.obj src\dos\timer.obj src\dos\ansi.obj src\dos\scoredb.obj &
-	src\game.obj
+obj = src\dos\main.obj src\dos\timer.obj src\dos\ansi.obj src\dos\video.obj &
+	src\dos\scoredb.obj src\game.obj
 inc = -Isrc -Isrc\dos
 !endif
 
@@ -35,7 +35,7 @@ $(bin): $(obj)
 	$(CC) -fo=$@ $(CFLAGS) $[*
 
 .asm.obj:
-	nasm -f obj -o $@ $[*.asm
+	nasm -f obj -i src/dos -o $@ $[*.asm
 
 !ifdef __UNIX__
 clean: .symbolic
