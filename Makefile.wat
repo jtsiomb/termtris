@@ -2,10 +2,12 @@
 obj = src/dos/main.obj src/dos/timer.obj src/dos/ansi.obj src/dos/video.obj &
 	src/dos/scoredb.obj src/game.obj
 inc = -Isrc -Isrc/dos
+asminc = -i src/dos/
 !else
 obj = src\dos\main.obj src\dos\timer.obj src\dos\ansi.obj src\dos\video.obj &
 	src\dos\scoredb.obj src\game.obj
 inc = -Isrc -Isrc\dos
+asminc = -i src\dos\
 !endif
 
 bin = termtris.com
@@ -17,7 +19,7 @@ dbg = -d3
 AS = nasm
 CC = wcc
 LD = wlink
-ASFLAGS = -fobj
+ASFLAGS = -fobj $(asminc)
 CFLAGS = $(dbg) $(opt) $(inc) $(def) -ms -s -zq -bt=com $(incpath)
 LDFLAGS = option map $(libpath)
 
@@ -35,7 +37,7 @@ $(bin): $(obj)
 	$(CC) -fo=$@ $(CFLAGS) $[*
 
 .asm.obj:
-	nasm -f obj -i src/dos -o $@ $[*.asm
+	$(AS) $(ASFLAGS) -o $@ $[*.asm
 
 !ifdef __UNIX__
 clean: .symbolic

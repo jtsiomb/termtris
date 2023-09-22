@@ -90,6 +90,7 @@ detect_video_:
 	ret
 
 	align 2
+	global vidtype
 vidtype dw 0
 
 	; vi:ft=nasm ts=8 sts=8 sw=8:

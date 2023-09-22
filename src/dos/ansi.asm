@@ -7,6 +7,7 @@ segment _TEXT class=CODE
 
 	extern _monochrome
 	extern _use_gfxchar
+	extern vidtype
 
 	global ansi_init_
 ansi_init_:
