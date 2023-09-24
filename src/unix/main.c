@@ -79,6 +79,7 @@ int main(int argc, char **argv)
 	if(init() == -1) {
 		return 1;
 	}
+	tcdrain(1);
 
 	gettimeofday(&tv0, 0);
 
