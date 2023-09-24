@@ -138,6 +138,7 @@ void ansi_recall(void)
 
 void ansi_reset(void)
 {
+	fputs("\033[0m", stdout);
 	fputs("\033[!p", stdout);
 	fflush(stdout);
 }
