@@ -245,6 +245,10 @@ int parse_args(int argc, char **argv)
 					use_gfxchar = 1;
 					break;
 
+				case 'a':
+					onlyascii = 1;
+					break;
+
 				case 's':
 					printf("High Scores\n-----------\n");
 					print_scores(10);

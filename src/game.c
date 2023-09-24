@@ -32,6 +32,7 @@ long tick_interval;
 int use_bell;
 int monochrome;
 int use_gfxchar;
+int onlyascii;
 int term_width, term_height;
 
 
@@ -242,6 +243,45 @@ int init_game(void)
 		}
 		row += SCR_COLS;
 	}
+
+	if(onlyascii) {
+		for(i=0; i<sizeof tiles/sizeof *tiles; i++) {
+			for(j=0; j<2; j++) {
+				int c = tiles[i][j] & 0xff;
+				switch(c) {
+				case G_CHECKER:
+					c = '#';
+					break;
+				case G_LR_CORNER:
+				case G_UR_CORNER:
+				case G_UL_CORNER:
+				case G_LL_CORNER:
+				case G_L_TEE:
+				case G_R_TEE:
+				case G_B_TEE:
+				case G_T_TEE:
+					c = '+';
+					break;
+				case G_CROSS:
+					c = 'X';
+					break;
+				case G_HLINE:
+					c = '-';
+					break;
+				case G_VLINE:
+					c = '|';
+					break;
+				case G_CDOT:
+					c = '.';
+					break;
+				default:
+					break;
+				}
+				tiles[i][j] = (tiles[i][j] & 0xff00) | c;
+			}
+		}
+	}
+
 
 	drawbg();
 
