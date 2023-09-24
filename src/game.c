@@ -259,6 +259,7 @@ void cleanup_game(void)
 	ansi_reset();
 #if !defined(MSDOS) && !defined(__COM__)
 	/* don't call this on DOS because it will call ansi_init again */
+	ansi_setcolor(WHITE, BLACK);
 	ansi_clearscr();
 #endif
 }
