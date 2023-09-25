@@ -30,6 +30,8 @@ install: $(bin)
 	cp $(bin) $(DESTDIR)$(PREFIX)/$(BINDIR)/$(bin)
 	mkdir -p $(DESTDIR)$(SCOREDIR)
 	chmod 0777 $(DESTDIR)$(SCOREDIR)
+	touch $(DESTDIR)$(SCOREDIR)/scores
+	chmod 0666 $(DESTDIR)$(SCOREDIR)/scores
 
 .PHONY: uninstall
 uninstall:
