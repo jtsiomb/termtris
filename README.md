@@ -82,7 +82,7 @@ details.
 
 Download
 --------
-Current release (1.7): http://nuclear.mutantstargoat.com/sw/termtris/termtris-1.7.tar.gz
+Current release (1.8): http://nuclear.mutantstargoat.com/sw/termtris/termtris-1.8.tar.gz
 
 Alternatively you may clone the latest version of the source code from the git
 repository:
@@ -106,8 +106,17 @@ rule like so:
 
     make PREFIX=/some/other/prefix install
 
+If you don't have GNU make and GCC installed, or you'd rather use the default
+make utility and C compiler on your UNIX system, you can use `Makefile.sgi`:
+
+    make -f Makefile.sgi
+
+(originally included for building on SGI IRIX with MIPSPro and the native make).
+
 
 Build (DOS)
 -----------
 To build the DOS version of termtris you'll need some version of the Watcom or
-OpenWatcom C compiler, and NASM. Build by typing `make -f Makefile.wat`.
+OpenWatcom C compiler, and the NASM assembler:
+
+    make -f Makefile.wat
