@@ -36,6 +36,8 @@ static void write_score(FILE *fp, struct score_entry *s);
 static int parse_score(char *buf, struct score_entry *ent);
 static void free_list(struct score_entry *s);
 
+const char *username;
+
 
 struct score_entry *read_scores(FILE *fp, int max_scores)
 {
@@ -104,11 +106,14 @@ int save_score(struct score_entry *sc)
 	struct passwd *pw;
 	struct flock flk;
 
-	if(!(pw = getpwuid(getuid()))) {
-		perror("save_score: failed to retrieve user information");
-		return -1;
+	if(!username) {
+		if(!(pw = getpwuid(getuid()))) {
+			perror("save_score: failed to retrieve user information");
+			return -1;
+		}
+		username = pw->pw_name;
 	}
-	newscore.user = pw->pw_name;
+	newscore.user = username;
 	newscore.score = sc->score;
 	newscore.lines = sc->lines;
 	newscore.level = sc->level;

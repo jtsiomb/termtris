@@ -65,6 +65,9 @@ static void read_joystick(void);
 static void update_joystick(void);
 #endif
 
+extern char *username;
+
+
 int main(int argc, char **argv)
 {
 	int i, res, maxfd;
@@ -249,6 +252,14 @@ int parse_args(int argc, char **argv)
 					onlyascii = 1;
 					break;
 
+				case 'u':
+					if(!argv[++i]) {
+						fprintf(stderr, "-u must be followed by a user name\n");
+						return -1;
+					}
+					username = argv[i];
+					break;
+
 				case 's':
 					printf("High Scores\n-----------\n");
 					print_scores(10);
@@ -288,6 +299,8 @@ void print_usage(const char *argv0)
 	printf(" -j <dev>: use joystick device for input\n");
 #endif
 	printf(" -g: use custom block graphics\n");
+	printf(" -a: use only ASCII characters\n");
+	printf(" -u <name>: override username for high scores\n");
 	printf(" -s: print top 10 high-scores and exit\n");
 	printf(" -h: print usage information and exit\n\n");
 
