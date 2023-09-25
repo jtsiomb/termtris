@@ -29,16 +29,18 @@ Controls
   - `A` or *left arrow* moves the block left.
   - `D` or *right arrow* moves the block right.
   - `S` or *down arrow* drops the block faster.
-  - `W` or *up arrow* rotates the block.
+  - `W`, *up arrow*, or *space* rotates the block.
   - *enter*, *tab*, or `0` drops the block immediately.
   - `P` pauses and unpauses the game.
   - *backspace*, or *delete* starts a new game.
   - `Q` or hitting escape twice, quits immediately.
   - `H` shows or hides the help panel which lists these keybindings.
+  - `R` shows or hides the high score table.
 
 Additionally on GNU/Linux systems any joystick can be used to control the game.
 The first available joystick is used automatically, or you can specify a
-joystick device with the `-j` commandline option.
+joystick device with the `-j` commandline option. If you'd rather disable
+joystick control, use the option `-j /dev/null`.
 
 When using a joystick, even axes are mapped to left/right, Odd axes are mapped
 to up/down, the first four buttons rotate, and the rest of the buttons pause
@@ -52,7 +54,9 @@ Custom character set
 --------------------
 For terminals with support for custom loadable character sets, you can instruct
 termtris to use graphical blocks instead of the bracket characters with the `-g`
-command-line argument.
+command-line argument. If `TERM` is set to a known supported terminal, graphical
+blocks are enabled automatically, use the `-T` option to disable and inhibit
+auto-detection.
 
 Different terminals have different capabilities when it comes to soft character
 sets. Termtris will try to detect the terminal type and choose the correct soft
@@ -60,6 +64,10 @@ font to load, but if it fails or you want to force a different terminal type,
 make sure to define the `TERM` environent variable. If `TERM` is undefined, or
 an unknown or unsupported terminal type, termtris will try to interrogate the
 terminal itself about its capabilities.
+
+The DOS version of termtris will automatically enable graphical blocks when it
+detects an EGA or VGA/SVGA graphics card. Use `-g` or `-T` to enable or disable
+it explicitly.
 
 
 License

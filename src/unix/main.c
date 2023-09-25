@@ -65,7 +65,8 @@ static void read_joystick(void);
 static void update_joystick(void);
 #endif
 
-extern char *username;
+extern int no_vtdetect;		/* defined in ansi.c */
+extern char *username;		/* defined in scoredb.c */
 
 
 int main(int argc, char **argv)
@@ -248,6 +249,11 @@ int parse_args(int argc, char **argv)
 					use_gfxchar = 1;
 					break;
 
+				case 'T':
+					use_gfxchar = 0;
+					no_vtdetect = 1;
+					break;
+
 				case 'a':
 					onlyascii = 1;
 					break;
@@ -292,29 +298,30 @@ void print_usage(const char *argv0)
 {
 	printf("Usage: %s [options]\n", argv0);
 	printf("Options:\n");
-	printf(" -t <dev>: terminal device (default: /dev/tty)\n");
-	printf(" -b: use bell for sound cues (default: off)\n");
-	printf(" -m: monochrome output (default: off)\n");
+	printf("  -t <dev>: terminal device (default: /dev/tty)\n");
+	printf("  -b: use bell for sound cues (default: off)\n");
+	printf("  -m: monochrome output (default: off)\n");
 #ifdef USE_JOYSTICK
-	printf(" -j <dev>: use joystick device for input\n");
+	printf("  -j <dev>: use joystick device for input\n");
 #endif
-	printf(" -g: use custom block graphics\n");
-	printf(" -a: use only ASCII characters\n");
-	printf(" -u <name>: override username for high scores\n");
-	printf(" -s: print top 10 high-scores and exit\n");
-	printf(" -h: print usage information and exit\n\n");
-
+	printf("  -g: use custom block graphics (default: auto)\n");
+	printf("  -T: don't use custom block graphics, inhibit auto-detection\n");
+	printf("  -a: use only ASCII characters\n");
+	printf("  -u <name>: override username for high scores\n");
+	printf("  -s: print top 10 high-scores and exit\n");
+	printf("  -h: print usage information and exit\n");
 	printf("Controls:\n");
-	printf(" <A> or <left arrow> moves the block left\n");
-	printf(" <D> or <right arrow> moves the block right\n");
-	printf(" <S> or <down arrow> drops the block faster\n");
-	printf(" <W> or <up arrow> rotates the block\n");
-	printf(" <enter>, <tab>, or <0> drops the block immediately\n");
-	printf(" <P> pauses and unpauses the game\n");
-	printf(" <backspace>, or <delete> starts a new game\n");
-	printf(" <Q> or hitting escape twice, quits immediately\n");
+	printf("  left/right/down arrow key moves the block left, right, or down\n");
+	printf("  <A>/<D>/<S> also moves the block left, right, or down\n");
+	printf("  <up arrow>, <W>, or <space> rotates the block\n");
+	printf("  <enter>, <tab>, or <0> drops the block immediately\n");
+	printf("  <P> pauses and unpauses the game\n");
+	printf("  <backspace>, or <delete> starts a new game\n");
+	printf("  <Q> or hitting escape twice, quits immediately\n");
+	printf("  <H> shows or hides the help panel which lists these keybindings.\n");
+	printf("  <R> shows or hides the high score table.\n");
 #ifdef USE_JOYSTICK
-	printf(" This build also accepts joystick input.\n\n");
+	printf("  This build also accepts joystick input (-j /dev/null to disable).\n");
 #endif
 }
 

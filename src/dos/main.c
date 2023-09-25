@@ -122,9 +122,10 @@ int parse_args(int argc, char **argv)
 					break;
 
 				case 'g':
+				case 'G':
 					use_gfxchar = 1;
 					break;
-				case 't':
+				case 'T':
 					use_gfxchar = 0;
 					break;
 
@@ -162,19 +163,20 @@ void print_usage(const char *argv0)
 	printf("Options:\n");
 	printf(" -m: monochrome output (default: off)\n");
 	printf(" -g: use graphical blocks (default: EGA/VGA)\n");
-	printf(" -t: use text blocks (default: MDA/CGA)\n");
+	printf(" -T: use text blocks (default: MDA/CGA)\n");
 	printf(" -s: print top 10 high-scores and exit\n");
 	printf(" -h: print usage information and exit\n\n");
 
 	printf("Controls:\n");
-	printf(" <A> or <left arrow> moves the block left\n");
-	printf(" <D> or <right arrow> moves the block right\n");
-	printf(" <S> or <down arrow> drops the block faster\n");
-	printf(" <W> or <up arrow> rotates the block\n");
+	printf(" left/right/down arrow key moves the block left, right, or down\n");
+	printf(" <A>/<D>/<S> also moves the block left, right, or down\n");
+	printf(" <up arrow>, <W>, or <space> rotates the block\n");
 	printf(" <enter>, <tab>, or <0> drops the block immediately\n");
 	printf(" <P> pauses and unpauses the game\n");
 	printf(" <backspace>, or <delete> starts a new game\n");
 	printf(" <Q> or hitting escape twice, quits immediately\n");
+	printf(" <H> shows or hides the help panel which lists these keybindings.\n");
+	printf(" <R> shows or hides the high score table.\n");
 }
 
 long get_msec(void)

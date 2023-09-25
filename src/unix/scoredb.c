@@ -36,7 +36,7 @@ static void write_score(FILE *fp, struct score_entry *s);
 static int parse_score(char *buf, struct score_entry *ent);
 static void free_list(struct score_entry *s);
 
-const char *username;
+char *username;
 
 
 struct score_entry *read_scores(FILE *fp, int max_scores)

@@ -21,6 +21,8 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 #include <ctype.h>
 #include "game.h"
 
+int no_vtdetect;
+
 enum { CS_ASCII, CS_GRAPH, CS_CUSTOM };
 
 #define GMAP_FIRST	0xb0
@@ -84,25 +86,29 @@ void ansi_init(void)
 	int i, val, vtclass = -1;
 	char buf[64], *env;
 
-	if(use_gfxchar) {
-		/* detect the terminal type */
-		/* if there is a TERM env var with "vtxxx" where xxx >= 200, heed that */
+	if(!no_vtdetect) {
+		/* detect the terminal type
+		 * if there is a TERM env var with "vtxxx" where xxx >= 200, enable
+		 * graphical blocks and set vtclass accordingly.
+		 */
 		if((env = getenv("TERM")) && tolower(env[0]) == 'v' && tolower(env[1]) == 't'
-				&& (val = atoi(env + 2)) >= 200 && val < 999) {
+				&& (val = atoi(env + 2)) >= 200 && val < 600) {
+			use_gfxchar = 1;
 			vtclass = 60 + val / 100;
-		} else {
-			/* otherwise try asking for the device attributes string */
+		}
+	}
+
+	if(use_gfxchar) {
+		if(vtclass == -1) {
+			/* unknown or unset TERM, try asking for the device attributes string */
 			printf("\033[c\n");
 			fflush(stdout);
 			if(fgets(buf, sizeof buf, stdin) && sscanf(buf, "\033[?%d", &val) == 1) {
 				vtclass = val;
+			} else {
+				vtclass = 64;	/* default to VT420 */
 			}
-
 		}
-		if(vtclass == -1) {
-			vtclass = 64;	/* default to VT420 */
-		}
-
 
 		/* upload custom character set */
 		printf("Uploading custom character set (VT%dx0) ... ", vtclass % 10);
