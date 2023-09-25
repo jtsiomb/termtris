@@ -26,24 +26,35 @@ static int name_dialog(char *buf);
 
 extern const char *progpath;
 
-#define MAX_NAME	36
-struct score_entry {
-	char user[MAX_NAME];
-	long score, lines, level;
-};
-
 #define NUM_SCORES	10
 static struct score_entry scores[NUM_SCORES] = {{"\0dummy"}};
 
+struct score_entry *read_scores(FILE *fp, int max_scores)
+{
+	int i;
 
-int save_score(long score, long lines, long level)
+	if(!*scores[0].user) {
+		return 0;
+	}
+
+	for(i=0; i<NUM_SCORES; i++) {
+		if(i < NUM_SCORES - 1 && *scores[i + 1].user) {
+			scores[i].next = scores + i + 1;
+		} else {
+			scores[i].next = 0;
+		}
+	}
+	return scores;
+}
+
+int save_score(struct score_entry *sc)
 {
 	int i, rest;
 	FILE *fp;
 	unsigned long offs;
 
 	for(i=0; i<NUM_SCORES; i++) {
-		if(!*scores[i].user || score > scores[i].score) {
+		if(!*scores[i].user || sc->score > scores[i].score) {
 			rest = NUM_SCORES - i - 1;
 			if(rest > 0) {
 				memmove(scores + i + 1, scores + i, rest * sizeof *scores);
@@ -55,13 +66,11 @@ int save_score(long score, long lines, long level)
 	if(i == NUM_SCORES) return 0;
 
 	/* get name */
-	name_dialog(scores[i].user);
-	if(!*scores[i].user) {
-		strcpy(scores[i].user, "dosuser");
+	name_dialog(sc->user);
+	if(!*sc->user) {
+		strcpy(sc->user, "dosuser");
 	}
-	scores[i].score = score;
-	scores[i].lines = lines;
-	scores[i].level = level;
+	scores[i] = *sc;
 
 
 	/* save the new scores table */

@@ -20,16 +20,11 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 #include <string.h>
 #include <errno.h>
 #include <ctype.h>
+#include <limits.h>
 #include <unistd.h>
 #include <fcntl.h>
 #include <pwd.h>
 #include "scoredb.h"
-
-struct score_entry {
-	char *user;
-	long score, lines, level;
-	struct score_entry *next;
-};
 
 #ifdef SCOREDIR
 #define SCOREDB_PATH	SCOREDIR "/scores"
@@ -38,10 +33,68 @@ struct score_entry {
 #endif
 
 static void write_score(FILE *fp, struct score_entry *s);
-static struct score_entry *read_scores(FILE *fp);
+static int parse_score(char *buf, struct score_entry *ent);
 static void free_list(struct score_entry *s);
 
-int save_score(long score, long lines, long level)
+
+struct score_entry *read_scores(FILE *fp, int max_scores)
+{
+	char buf[128];
+	struct score_entry *node, *head = 0, *tail = 0;
+	struct flock flk;
+	int close_file = 0;
+
+	if(!fp) {
+		if(!(fp = fopen(SCOREDB_PATH, "rb"))) {
+			return 0;
+		}
+		close_file = 1;
+
+		flk.l_type = F_RDLCK;
+		flk.l_start = flk.l_len = 0;
+		flk.l_whence = SEEK_SET;
+		while(fcntl(fileno(fp), F_SETLKW, &flk) == -1);
+	}
+	if(max_scores <= 0) max_scores = INT_MAX;
+
+	while(max_scores-- > 0 && fgets(buf, sizeof buf, fp)) {
+		struct score_entry ent;
+		if(parse_score(buf, &ent) == -1) {
+			continue;
+		}
+
+		if(!(node = malloc(sizeof *node)) || !(node->user = malloc(strlen(ent.user) + 1))) {
+			perror("failed to allocate scorelist");
+			free(node);
+			free_list(head);
+			return 0;
+		}
+		strcpy(node->user, ent.user);
+		node->score = ent.score;
+		node->lines = ent.lines;
+		node->level = ent.level;
+		node->next = 0;
+
+		if(!head) {
+			head = tail = node;
+		} else {
+			tail->next = node;
+			tail = node;
+		}
+	}
+
+	if(close_file) {
+		flk.l_type = F_UNLCK;
+		flk.l_start = flk.l_len = 0;
+		flk.l_whence = SEEK_SET;
+		fcntl(fileno(fp), F_SETLK, &flk);
+		fclose(fp);
+	}
+
+	return head;
+}
+
+int save_score(struct score_entry *sc)
 {
 	int fd, count;
 	FILE *fp;
@@ -56,9 +109,9 @@ int save_score(long score, long lines, long level)
 		return -1;
 	}
 	newscore.user = pw->pw_name;
-	newscore.score = score;
-	newscore.lines = lines;
-	newscore.level = level;
+	newscore.score = sc->score;
+	newscore.lines = sc->lines;
+	newscore.level = sc->level;
 
 	if((fd = open(SCOREDB_PATH, O_RDWR | O_CREAT, 0666)) == -1 || !(fp = fdopen(fd, "r+"))) {
 		close(fd);
@@ -72,18 +125,19 @@ int save_score(long score, long lines, long level)
 	flk.l_whence = SEEK_SET;
 	while(fcntl(fd, F_SETLKW, &flk) == -1);
 
-	slist = read_scores(fp);
+	slist = read_scores(fp, 0);
 
 	rewind(fp);
 
 	count = 0;
 	sptr = slist;
-	while(sptr && sptr->score >= score && count++ < 100) {
+	while(sptr && sptr->score >= sc->score && count++ < 100) {
 		write_score(fp, sptr);
 		sptr = sptr->next;
 	}
 	if(count++ < 100) {
 		write_score(fp, &newscore);
+		sc->user = newscore.user;
 	}
 	while(sptr && count++ < 100) {
 		write_score(fp, sptr);
@@ -138,40 +192,6 @@ static int parse_score(char *buf, struct score_entry *ent)
 	return 0;
 }
 
-static struct score_entry *read_scores(FILE *fp)
-{
-	char buf[128];
-	struct score_entry *node, *head = 0, *tail = 0;
-
-	while(fgets(buf, sizeof buf, fp)) {
-		struct score_entry ent;
-		if(parse_score(buf, &ent) == -1) {
-			continue;
-		}
-
-		if(!(node = malloc(sizeof *node)) || !(node->user = malloc(strlen(ent.user) + 1))) {
-			perror("failed to allocate scorelist");
-			free(node);
-			free_list(head);
-			return 0;
-		}
-		strcpy(node->user, ent.user);
-		node->score = ent.score;
-		node->lines = ent.lines;
-		node->level = ent.level;
-		node->next = 0;
-
-		if(!head) {
-			head = tail = node;
-		} else {
-			tail->next = node;
-			tail = node;
-		}
-	}
-
-	return head;
-}
-
 static void free_list(struct score_entry *s)
 {
 	while(s) {
@@ -184,36 +204,19 @@ static void free_list(struct score_entry *s)
 
 int print_scores(int num)
 {
-	int i;
-	FILE *fp;
-	char buf[128];
-	struct score_entry sc;
-	struct flock flk;
+	int idx;
+	struct score_entry *sc;
 
-	if(!(fp = fopen(SCOREDB_PATH, "rb"))) {
+	if(!(sc = read_scores(0, num))) {
 		fprintf(stderr, "no high-scores found\n");
 		return -1;
 	}
 
-	flk.l_type = F_RDLCK;
-	flk.l_start = flk.l_len = 0;
-	flk.l_whence = SEEK_SET;
-	while(fcntl(fileno(fp), F_SETLKW, &flk) == -1);
-
-	for(i=0; i<num; i++) {
-		if(!fgets(buf, sizeof buf, fp)) break;
-
-		if(parse_score(buf, &sc) == -1) {
-			continue;
-		}
-		printf("%2d. %s - %ld pts  (%ld lines)\n", i + 1, sc.user, sc.score, sc.lines);
+	idx = 0;
+	while(sc) {
+		printf("%2d. %s - %ld pts  (%ld lines)\n", ++idx, sc->user, sc->score, sc->lines);
+		sc = sc->next;
 	}
 
-	flk.l_type = F_UNLCK;
-	flk.l_start = flk.l_len = 0;
-	flk.l_whence = SEEK_SET;
-	fcntl(fileno(fp), F_SETLK, &flk);
-
-	fclose(fp);
 	return 0;
 }

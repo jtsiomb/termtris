@@ -58,12 +58,14 @@ static void update_cur_piece(void);
 static void addscore(int nlines);
 static void print_numbers(void);
 static void print_help(void);
+static void print_slist(void);
 static void full_redraw(void);
 static int spawn(void);
 static int collision(int piece, const int *pos);
 static void stick(int piece, const int *pos);
 static void erase_completed(void);
 static void draw_piece(int piece, const int *pos, int rot, int mode);
+static void clear(void);
 static void drawbg(void);
 static void drawpf(void);
 static void draw_line(int row, int blink);
@@ -77,9 +79,11 @@ static int complines[4];
 static int num_complines;
 static int gameover;
 static int pause;
-static long score, level, lines;
 static int just_spawned;
-static int show_help;
+static int show_help, show_highscores;
+
+static struct score_entry *scores;
+static struct score_entry cur_score;
 
 static int term_xoffs = 20, term_yoffs = 0;	/* TODO detect terminal size to set offsets */
 
@@ -165,10 +169,11 @@ static const long level_speed[NUM_LEVELS] = {
 static const char *helpstr[] = {
 	"   Toggle (H)elp",
 	"",
-	"left,right,down: move",
-	"   up/space: rotate",
+	"left,right,down/asd:",
+	"     move piece",
+	" up/w/space: rotate",
 	"enter/tab/0: drop",
-	" backsp/del: new game",
+	" backsp/del: restart",
 	"          P: pause",
 	"          Q: quit",
 	"",
@@ -181,12 +186,14 @@ int init_game(void)
 	int i, j;
 	int *row = scr;
 
+	scores = read_scores(0, 10);
+	memset(&cur_score, 0, sizeof cur_score);
+
 	srand(time(0));
 
 	pause = 0;
 	gameover = 0;
 	num_complines = 0;
-	score = level = lines = 0;
 	tick_interval = level_speed[0];
 	cur_piece = -1;
 	prev_piece = 0;
@@ -283,18 +290,19 @@ int init_game(void)
 	}
 
 
-	drawbg();
-
-	print_numbers();
+	clear();
 	print_help();
+	drawbg();
+	print_slist();
+	print_numbers();
 	fflush(stdout);
 	return 0;
 }
 
 void cleanup_game(void)
 {
-	if(score) {
-		save_score(score, lines, level);
+	if(cur_score.score) {
+		save_score(&cur_score);
 	}
 	ansi_reset();
 #if !defined(MSDOS) && !defined(__COM__)
@@ -335,10 +343,10 @@ long update(long msec)
 			return GAMEOVER_FILL_RATE;
 		}
 
-		if(score) {
-			save_score(score, lines, level);
+		if(cur_score.score) {
+			save_score(&cur_score);
 			full_redraw();
-			score = lines = level = 0;
+			memset(&cur_score, 0, sizeof cur_score);
 		}
 		return WAIT_INF;
 	}
@@ -406,15 +414,21 @@ static void addscore(int nlines)
 
 	assert(nlines < 5);
 
-	score += stab[nlines - 1] * (level + 1);
-	lines += nlines;
+	cur_score.score += stab[nlines - 1] * (cur_score.level + 1);
+	cur_score.lines += nlines;
 
-	level = lines / 10;
-	if(level > NUM_LEVELS - 1) level = NUM_LEVELS - 1;
+	cur_score.level = cur_score.lines / 10;
+	if(cur_score.level > NUM_LEVELS - 1) {
+		cur_score.level = NUM_LEVELS - 1;
+	}
 
-	tick_interval = level_speed[level];
+	tick_interval = level_speed[cur_score.level];
 
 	print_numbers();
+
+	if(show_highscores) {
+		print_slist();
+	}
 }
 
 static void print_numbers(void)
@@ -424,15 +438,15 @@ static void print_numbers(void)
 	ansi_setcolor(BLACK, WHITE);
 
 	ansi_setcursor(term_yoffs + 3, term_xoffs + 14 * 2);
-	sprintf(buf, "%10ld", score);
+	sprintf(buf, "%10ld", cur_score.score);
 	ansi_putstr(buf, 7);
 
 	ansi_setcursor(term_yoffs + 7, term_xoffs + 17 * 2);
-	sprintf(buf, "%2ld", level);
+	sprintf(buf, "%2ld", cur_score.level);
 	ansi_putstr(buf, 7);
 
 	ansi_setcursor(term_yoffs + 10, term_xoffs + 14 * 2);
-	sprintf(buf, "%8ld", lines);
+	sprintf(buf, "%8ld", cur_score.lines);
 	ansi_putstr(buf, 7);
 }
 
@@ -447,6 +461,100 @@ static void print_help(void)
 		} else {
 			ansi_putstr("                     ", 0x70);
 		}
+	}
+}
+
+static char *clampstr(const char *s, int len)
+{
+	int i, full_len;
+	static char buf[64];
+
+	if(len > 63) len = 63;
+
+	if(len <= 0) {
+		buf[0] = 0;
+		return buf;
+	}
+
+	if((full_len = strlen(s)) <= len) {
+		strcpy(buf, s);
+		return buf;
+	}
+
+	if(len < 3) {
+		memset(buf, ' ', len);
+		buf[len] = 0;
+		return buf;
+	}
+
+	for(i=0; i<len-2; i++) {
+		buf[i] = *s++;
+	}
+	strcpy(buf + i, "..");
+	return buf;
+}
+
+static void print_slist(void)
+{
+	int i, x, len, namelen, sclen, maxlen, color, printed_cur = 0;
+	struct score_entry *sc;
+	char fmtbuf[128], fmt[32], *user;
+
+	x = term_xoffs + SCR_COLS * 2 + 1;
+	maxlen = term_width - 1 - x;
+
+	if(maxlen < 8) return;
+	if(maxlen > 127) maxlen = 127;
+
+	ansi_setcursor(1, x);
+	if(maxlen < 15) {
+		ansi_putstr("Sco(r)es", 0x70);
+	} else {
+		ansi_putstr("Toggle Sco(r)es", 0x70);
+	}
+
+	sc = scores;
+	for(i=0; i<10; i++) {
+		ansi_setcursor(i + 3, x);
+		if(!show_highscores) {
+fillblank:	memset(fmtbuf, ' ', maxlen);
+			fmtbuf[maxlen] = 0;
+			ansi_putstr(fmtbuf, 0x70);
+			if(sc) sc = sc->next;
+			continue;
+		}
+
+		color = 0x70;
+		if(!printed_cur) {
+			if(!sc || cur_score.score > sc->score) {
+				cur_score.next = sc;
+				sc = &cur_score;
+				printed_cur = 1;
+				color |= 0x80;
+			}
+		} else {
+			if(!sc) goto fillblank;
+		}
+
+		user = (sc->user && *sc->user) ? sc->user : "***";
+
+		sclen = sprintf(fmtbuf, "%ld", sc->score);
+		if(sclen > maxlen - 5) goto fillblank;
+		namelen = maxlen - sclen - 5;
+
+		if(strlen(user) <= namelen) {
+			sprintf(fmt, "%%2d. %%-%ds %%ld", namelen);
+			len = sprintf(fmtbuf, fmt, i + 1, user, sc->score);
+		} else {
+			len = sprintf(fmtbuf, "%2d. %s %ld", i + 1, clampstr(user, namelen), sc->score);
+		}
+		if(len < maxlen) {
+			memset(fmtbuf + len, ' ', maxlen - len);
+		}
+		fmtbuf[maxlen] = 0;
+		sc = sc->next;
+
+		ansi_putstr(fmtbuf, color);
 	}
 }
 
@@ -609,6 +717,12 @@ void game_input(int c)
 		fflush(stdout);
 		break;
 
+	case 'r':
+		show_highscores ^= 1;
+		print_slist();
+		fflush(stdout);
+		break;
+
 	case '`':
 		full_redraw();
 		break;
@@ -621,9 +735,11 @@ void game_input(int c)
 
 static void full_redraw(void)
 {
-	drawbg();
-	print_numbers();
+	clear();
 	print_help();
+	drawbg();
+	print_slist();
+	print_numbers();
 	drawpf();
 	if(!gameover) {
 		draw_piece(next_piece, preview_pos, 0, DRAW_PIECE);
@@ -782,16 +898,19 @@ static void draw_piece(int piece, const int *pos, int rot, int mode)
 	fflush(stdout);
 }
 
+static void clear(void)
+{
+	ansi_setcolor(WHITE, BLACK);
+	ansi_clearscr();
+	ansi_cursor(0);
+}
+
 static void drawbg(void)
 {
 	int i, j;
 	int *sptr = scr;
 
 	term_xoffs = term_width / 2 - SCR_COLS;
-
-	ansi_setcolor(WHITE, BLACK);
-	ansi_clearscr();
-	ansi_cursor(0);
 
 	for(i=0; i<SCR_ROWS; i++) {
 		ansi_setcursor(term_yoffs + i, term_xoffs + 0);
@@ -855,7 +974,11 @@ static void wrtile(int tileid)
 
 		if(use_gfxchar && (cc == '[' || cc == ']')) {
 			ca <<= 4;	/* for gfx blocks bg->fg and bg=0 */
+#if defined(MSDOS) || defined(__COM__)
 			if(!ca) ca = 0x80;	/* special case for T which has black bg */
+#else
+			if(!ca) ca = 0x70;	/* special case for T which has black bg */
+#endif
 		}
 
 		ansi_ibmchar(cc, ca);

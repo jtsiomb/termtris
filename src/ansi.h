@@ -36,6 +36,7 @@ enum {
 };
 
 enum { BLACK, BLUE, GREEN, CYAN, RED, MAGENTA, YELLOW, WHITE };
+#define BOLD	8
 
 void ansi_init(void);
 
