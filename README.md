@@ -82,18 +82,23 @@ details.
 
 Download
 --------
+### Source code
 Current release (1.8): http://nuclear.mutantstargoat.com/sw/termtris/termtris-1.8.tar.gz
+
+Releases are also mirrored on github: https://github.com/jtsiomb/termtris/releases
 
 Alternatively you may clone the latest version of the source code from the git
 repository:
 
     git clone https://github.com/jtsiomb/termtris
 
+### Pre-compiled
 Pre-compiled binaries might be available in your package management system of
 choice, but please do not submit any bug reports without first trying to build
 termtris yourself from the latest git source code.
   - Debian/Ubuntu/Mint: `apt-get install termtris`
 
+Pre-compiled DOS binary of termtris 1.8: http://nuclear.mutantstargoat.com/sw/termtris/termtris.com
 
 Build (UNIX)
 ------------
