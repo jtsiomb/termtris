@@ -22,6 +22,8 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 #include "scoredb.h"
 #include "ansi.h"
 
+#define SCORES_OFFS	(((long)scores - 256) & 0xffff)
+
 static int name_dialog(char *buf);
 
 extern const char *progpath;
@@ -32,6 +34,15 @@ static struct score_entry scores[NUM_SCORES] = {{"\0dummy"}};
 struct score_entry *read_scores(FILE *fp, int max_scores)
 {
 	int i;
+
+	if(!fp) {
+		if(!(fp = fopen(progpath, "r+b"))) {
+			return 0;
+		}
+	}
+	fseek(fp, SCORES_OFFS, SEEK_SET);
+	fread(scores, 1, sizeof scores, fp);
+	fclose(fp);
 
 	if(!*scores[0].user) {
 		return 0;
@@ -49,39 +60,53 @@ struct score_entry *read_scores(FILE *fp, int max_scores)
 
 int save_score(struct score_entry *sc)
 {
-	int i, rest;
+	int i, idx, rest;
 	FILE *fp;
-	unsigned long offs;
+	struct score_entry newsc[NUM_SCORES];
 
+	idx = -1;
 	for(i=0; i<NUM_SCORES; i++) {
 		if(!*scores[i].user || sc->score > scores[i].score) {
-			rest = NUM_SCORES - i - 1;
-			if(rest > 0) {
-				memmove(scores + i + 1, scores + i, rest * sizeof *scores);
-			}
+			idx = i;
 			break;
 		}
 	}
 
-	if(i == NUM_SCORES) return 0;
+	if(idx == -1) return 0;
+	rest = NUM_SCORES - idx - 1;
+
+	if(idx > 0) {
+		memcpy(newsc, scores, idx * sizeof *newsc);
+	}
+	if(rest > 0) {
+		memcpy(newsc + idx + 1, scores + idx, rest * sizeof *newsc);
+	}
 
 	/* get name */
 	name_dialog(sc->user);
 	if(!*sc->user) {
 		strcpy(sc->user, "dosuser");
 	}
-	scores[i] = *sc;
-
+	newsc[idx] = *sc;
 
 	/* save the new scores table */
-	offs = ((long)scores - 256) & 0xffff;
-
 	if(!(fp = fopen(progpath, "r+b"))) {
 		return -1;
 	}
-	fseek(fp, offs, SEEK_SET);
-	fwrite(scores, 1, sizeof scores, fp);
+	fseek(fp, SCORES_OFFS, SEEK_SET);
+	fwrite(newsc, 1, sizeof newsc, fp);
 	fclose(fp);
+
+	/* update the next pointers */
+	for(i=1; i<10; i++) {
+		if(*newsc[i].user) {
+			newsc[i-1].next = newsc + i;
+		} else {
+			newsc[i-1].next = 0;
+		}
+	}
+	newsc[9].next = 0;
+
 	return 0;
 }
 
