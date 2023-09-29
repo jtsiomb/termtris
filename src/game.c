@@ -967,6 +967,10 @@ static void wrtile(int tileid)
 {
 	int i;
 
+	if(tileid < 0 || tileid >= sizeof tiles / sizeof *tiles) {
+		return;
+	}
+
 	for(i=0; i<2; i++) {
 		uint16_t c = tiles[tileid][i];
 		unsigned char cc = c & 0xff;
