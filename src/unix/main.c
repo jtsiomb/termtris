@@ -141,6 +141,12 @@ end:
 	return 0;
 }
 
+void wait_display(void)
+{
+	fflush(stdout);
+	tcdrain(1);
+}
+
 int init(void)
 {
 	int fd;

@@ -33,4 +33,9 @@ void cleanup_game(void);
 long update(long msec);
 void game_input(int c);
 
+/* wait for any pending drawing to be completed before proceeding
+ * implemented in main.c
+ */
+void wait_display(void);
+
 #endif	/* GAME_H_ */

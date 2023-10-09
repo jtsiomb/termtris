@@ -357,6 +357,7 @@ long update(long msec)
 
 		if(blink > 6) {
 			erase_completed();
+			wait_display();
 			num_complines = 0;
 			return 0;
 		}
@@ -745,7 +746,7 @@ static void full_redraw(void)
 		draw_piece(next_piece, preview_pos, 0, DRAW_PIECE);
 		draw_piece(cur_piece, next_pos, cur_rot, DRAW_PIECE);
 	}
-	fflush(stdout);
+	wait_display();
 }
 
 static int spawn(void)

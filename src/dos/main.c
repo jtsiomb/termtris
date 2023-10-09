@@ -88,6 +88,10 @@ end:
 	return 0;
 }
 
+void wait_display(void)
+{
+}
+
 int init(void)
 {
 	term_width = 80;
