@@ -193,9 +193,12 @@ int init(void)
 	umask(002);
 	open("/tmp/termtris.log", O_WRONLY | O_CREAT | O_TRUNC, 0664);
 
-	ioctl(1, TIOCGWINSZ, &winsz);
-	term_width = winsz.ws_col;
-	term_height = winsz.ws_row;
+	term_width = 80;
+	term_height = 24;
+	if(ioctl(1, TIOCGWINSZ, &winsz) != -1 && winsz.ws_col > 0) {
+		term_width = winsz.ws_col;
+		term_height = winsz.ws_row;
+	}
 
 #ifdef USE_JOYSTICK
 	if(jsdev != -1) {
