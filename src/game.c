@@ -403,6 +403,8 @@ static void update_cur_piece(void)
 	if(memcmp(pos, next_pos, sizeof pos) != 0 || cur_rot != prev_rot) {
 		draw_piece(cur_piece, pos, prev_rot, ERASE_PIECE);
 		draw_piece(cur_piece, next_pos, cur_rot, DRAW_PIECE);
+		ansi_setcursor(0, 0);
+		fflush(stdout);
 		memcpy(pos, next_pos, sizeof pos);
 		prev_rot = cur_rot;
 	}
@@ -745,6 +747,8 @@ static void full_redraw(void)
 	if(!gameover) {
 		draw_piece(next_piece, preview_pos, 0, DRAW_PIECE);
 		draw_piece(cur_piece, next_pos, cur_rot, DRAW_PIECE);
+		ansi_setcursor(0, 0);
+		fflush(stdout);
 	}
 	wait_display();
 }
@@ -759,6 +763,8 @@ static int spawn(void)
 
 	draw_piece(next_piece, preview_pos, 0, ERASE_PIECE);
 	draw_piece(r, preview_pos, 0, DRAW_PIECE);
+	ansi_setcursor(0, 0);
+	fflush(stdout);
 
 	cur_piece = next_piece;
 	next_piece = r;
@@ -896,7 +902,6 @@ static void draw_piece(int piece, const int *pos, int rot, int mode)
 		ansi_setcursor(term_yoffs + y, term_xoffs + x * 2);
 		wrtile(tile);
 	}
-	fflush(stdout);
 }
 
 static void clear(void)
