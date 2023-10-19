@@ -1,11 +1,11 @@
-Termtris - tetris game for ANSI/VT220 terminals
+Termtris - tetris game for ANSI/VT100 terminals
 ===============================================
 
 ![shots](http://nuclear.mutantstargoat.com/sw/termtris/img/termtris-banner.png)
 
 About
 -----
-Termtris runs on UNIX systems and requires an ANSI or VT220-compatible terminal
+Termtris runs on UNIX systems and requires an ANSI or VT100-compatible terminal
 for input and output. It has been tested with a VT420, xterm, rxvt, the Linux
 console, and kermit running on MS-DOS over a serial link, but it should work on
 any terminal capable of interpreting ANSI escape sequences for cursor
