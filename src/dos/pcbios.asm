@@ -25,8 +25,22 @@ segment _TEXT class=CODE
 	extern _use_gfxchar
 	extern vidtype
 
-	global ansi_init_
-ansi_init_:
+	extern _term_reset
+	extern _term_clearscr
+	extern _term_setcursor
+	extern _term_cursor
+	extern _term_setcolor
+	extern _term_ibmchar
+
+	global pcbios_init_
+pcbios_init_:
+	mov word [_term_reset], pcbios_reset_
+	mov word [_term_clearscr], pcbios_clearscr_
+	mov word [_term_setcursor], pcbios_setcursor_
+	mov word [_term_cursor], pcbios_cursor_
+	mov word [_term_setcolor], pcbios_setcolor_
+	mov word [_term_ibmchar], pcbios_ibmchar_
+
 	mov ax, [_use_gfxchar]
 	test ax, ax
 	jz .end
@@ -59,21 +73,21 @@ ansi_init_:
 	pop bx
 .end:	ret
 
-	global ansi_reset_
-ansi_reset_:
+	global pcbios_reset_
+pcbios_reset_:
 	mov ax, 0f00h
 	int 10h
 	xor ah, ah
 	int 10h
 	ret
 
-	global ansi_clearscr_
-ansi_clearscr_:
-	call ansi_reset_
-	jmp ansi_init_
+	global pcbios_clearscr_
+pcbios_clearscr_:
+	call pcbios_reset_
+	jmp pcbios_init_
 
-	global ansi_cursor_
-ansi_cursor_:
+	global pcbios_cursor_
+pcbios_cursor_:
 	push bx
 	push cx
 
@@ -95,8 +109,8 @@ ansi_cursor_:
 	ret
 
 
-	global ansi_setcursor_
-ansi_setcursor_:
+	global pcbios_setcursor_
+pcbios_setcursor_:
 	push bx
 	mov dh, al	; row (col is already in dl)
 	xor bx, bx
@@ -109,8 +123,8 @@ ansi_setcursor_:
 	align 2
 attr dw 0700h
 
-	global ansi_setcolor_
-ansi_setcolor_:
+	global pcbios_setcolor_
+pcbios_setcolor_:
 	shl ax, 1
 	shl ax, 1
 	shl ax, 1
@@ -129,8 +143,8 @@ advcursor:
 	ret
 
 
-	global ansi_ibmchar_
-ansi_ibmchar_:
+	global pcbios_ibmchar_
+pcbios_ibmchar_:
 	push bx
 	push cx
 	; if it's [ or ], set bit 7 to use the graphic blocks
@@ -157,20 +171,6 @@ ansi_ibmchar_:
 	call advcursor
 	pop cx
 	pop bx
-	ret
-
-	global ansi_putstr_
-ansi_putstr_:
-	push si
-	mov si, ax
-.top:	lodsb
-	test al, al
-	jz .done
-	push dx
-	call ansi_ibmchar_
-	pop dx
-	jmp .top
-.done:	pop si
 	ret
 
 glyphs_vga:

@@ -20,6 +20,17 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 #include <string.h>
 #include <ctype.h>
 #include "game.h"
+#include "term.h"
+
+
+void ansi_recall(void);
+void ansi_reset(void);
+void ansi_clearscr(void);
+void ansi_setcursor(int row, int col);
+void ansi_cursor(int show);
+void ansi_setcolor(int fg, int bg);
+void ansi_ibmchar(unsigned char c, unsigned char attr);
+
 
 int no_vtdetect;
 
@@ -107,11 +118,13 @@ void ansi_init(void)
 				vtclass = val;
 			} else {
 				vtclass = 64;	/* default to VT420 */
+				fprintf(stderr, "Custom graphics charset enabled, but failed to detect terminal type. Assuming VT420 or higher.\n");
 			}
 		}
 
-		/* upload custom character set */
-		printf("Uploading custom character set (VT%dx0) ... ", vtclass % 10);
+		/* load custom character set */
+		fprintf(stderr, "Loading custom character set (VT%dx0) ... \n", vtclass % 10);
+		printf("Loading custom character set (VT%dx0) ... ", vtclass % 10);
 		fflush(stdout);
 		for(i=0; i<NUM_CUSTOM; i++) {
 			switch(vtclass) {
@@ -134,6 +147,13 @@ void ansi_init(void)
 		}
 		printf("done\n");
 	}
+
+	term_reset = ansi_reset;
+	term_clearscr = ansi_clearscr;
+	term_setcursor = ansi_setcursor;
+	term_cursor = ansi_cursor;
+	term_setcolor = ansi_setcolor;
+	term_ibmchar = ansi_ibmchar;
 }
 
 void ansi_recall(void)
@@ -156,7 +176,11 @@ void ansi_clearscr(void)
 
 void ansi_setcursor(int row, int col)
 {
-	printf("\033[%d;%dH", row + 1, col + 1);
+	if((row | col) == 0) {
+		fputs("\033[H", stdout);
+	} else {
+		printf("\033[%d;%dH", row + 1, col + 1);
+	}
 }
 
 void ansi_cursor(int show)
@@ -225,11 +249,4 @@ void ansi_ibmchar(unsigned char c, unsigned char attr)
 	*ptr = 0;
 
 	fputs(cmd, stdout);
-}
-
-void ansi_putstr(const char *s, unsigned char attr)
-{
-	while(*s) {
-		ansi_ibmchar(*s++, attr);
-	}
 }

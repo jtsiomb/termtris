@@ -1,11 +1,11 @@
 !ifdef __UNIX__
-obj = src/dos/main.obj src/dos/timer.obj src/dos/ansi.obj src/dos/video.obj &
-	src/dos/scoredb.obj src/game.obj
+obj = src/dos/main.obj src/dos/timer.obj src/dos/video.obj src/dos/pcbios.obj &
+	src/dos/scoredb.obj src/game.obj src/term.obj src/ansi.obj src/vt52.obj
 inc = -Isrc -Isrc/dos
 asminc = -i src/dos/
 !else
-obj = src\dos\main.obj src\dos\timer.obj src\dos\ansi.obj src\dos\video.obj &
-	src\dos\scoredb.obj src\game.obj
+obj = src\dos\main.obj src\dos\timer.obj src\dos\video.obj src\dos\pcbios.obj &
+	src\dos\scoredb.obj src\game.obj src\term.obj src\ansi.obj src\vt52.obj
 inc = -Isrc -Isrc\dos
 asminc = -i src\dos\
 !endif

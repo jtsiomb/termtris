@@ -1,5 +1,5 @@
 /*
-Termtris - a tetris game for ANSI/VT100 terminals
+Termtris - a tetris game for TERM/VT100 terminals
 Copyright (C) 2019-2022  John Tsiombikas <nuclear@member.fsf.org>
 
 This program is free software: you can redistribute it and/or modify
@@ -15,8 +15,8 @@ GNU General Public License for more details.
 You should have received a copy of the GNU General Public License
 along with this program.  If not, see <https://www.gnu.org/licenses/>.
 */
-#ifndef ANSI_H_
-#define ANSI_H_
+#ifndef TERM_H_
+#define TERM_H_
 
 enum {
 	G_DIAMOND	= 0x04,
@@ -38,18 +38,17 @@ enum {
 enum { BLACK, BLUE, GREEN, CYAN, RED, MAGENTA, YELLOW, WHITE };
 #define BOLD	8
 
-void ansi_init(void);
+void term_init(void);
 
-void ansi_reset(void);
-void ansi_clearscr(void);
+extern void (*term_reset)(void);
+extern void (*term_clearscr)(void);
+extern void (*term_setcursor)(int row, int col);
+extern void (*term_cursor)(int show);
+extern void (*term_setcolor)(int fg, int bg);
 
-void ansi_setcursor(int row, int col);
-void ansi_cursor(int show);
+/* convert a PC cga/ega/vga char+attr to an TERM sequence and write it to stdout */
+extern void (*term_ibmchar)(unsigned char c, unsigned char attr);
 
-void ansi_setcolor(int fg, int bg);
+void term_putstr(const char *s, unsigned char attr);
 
-/* convert a PC cga/ega/vga char+attr to an ANSI sequence and write it to stdout */
-void ansi_ibmchar(unsigned char c, unsigned char attr);
-void ansi_putstr(const char *s, unsigned char attr);
-
-#endif	/* ANSI_H_ */
+#endif	/* TERM_H_ */

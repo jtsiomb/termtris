@@ -20,7 +20,16 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 #include <ctype.h>
 #include <conio.h>
 #include "scoredb.h"
-#include "ansi.h"
+#include "term.h"
+
+void ansi_recall(void);
+void ansi_reset(void);
+void ansi_clearscr(void);
+void ansi_setcursor(int row, int col);
+void ansi_cursor(int show);
+void ansi_setcolor(int fg, int bg);
+void ansi_ibmchar(unsigned char c, unsigned char attr);
+
 
 #define SCORES_OFFS	(((long)scores - 256) & 0xffff)
 
@@ -139,45 +148,45 @@ static int name_dialog(char *buf)
 	int i, j, key, cur;
 	char *s;
 
-	ansi_setcursor(8, DLG_X);
-	ansi_ibmchar(G_UL_CORNER, ATTR);
+	term_setcursor(8, DLG_X);
+	term_ibmchar(G_UL_CORNER, ATTR);
 	for(i=1; i<DLG_W-1; i++) {
-		ansi_ibmchar(G_HLINE, ATTR);
+		term_ibmchar(G_HLINE, ATTR);
 	}
-	ansi_ibmchar(G_UR_CORNER, ATTR);
+	term_ibmchar(G_UR_CORNER, ATTR);
 
-	ansi_setcursor(9, DLG_X);
-	ansi_ibmchar(G_VLINE, ATTR);
+	term_setcursor(9, DLG_X);
+	term_ibmchar(G_VLINE, ATTR);
 	for(i=1; i<DLG_W-1; i++) {
-		ansi_ibmchar(' ', 0x70);
+		term_ibmchar(' ', 0x70);
 	}
-	ansi_ibmchar(G_VLINE, ATTR);
-	ansi_ibmchar(G_CHECKER, 0x70);
+	term_ibmchar(G_VLINE, ATTR);
+	term_ibmchar(G_CHECKER, 0x70);
 
-	ansi_setcursor(10, DLG_X);
-	ansi_ibmchar(G_LL_CORNER, ATTR);
+	term_setcursor(10, DLG_X);
+	term_ibmchar(G_LL_CORNER, ATTR);
 	for(i=1; i<DLG_W-1; i++) {
-		ansi_ibmchar(G_HLINE, ATTR);
+		term_ibmchar(G_HLINE, ATTR);
 	}
-	ansi_ibmchar(G_LR_CORNER, ATTR);
-	ansi_ibmchar(G_CHECKER, 0x70);
+	term_ibmchar(G_LR_CORNER, ATTR);
+	term_ibmchar(G_CHECKER, 0x70);
 
-	ansi_setcursor(11, DLG_X + 1);
+	term_setcursor(11, DLG_X + 1);
 	for(i=0; i<DLG_W; i++) {
-		ansi_ibmchar(G_CHECKER, 0x70);
+		term_ibmchar(G_CHECKER, 0x70);
 	}
 
-	ansi_setcursor(8, DLG_X + 1);
-	ansi_putstr(" High score! ", ATTR);
-	ansi_setcursor(9, DLG_X + 1);
-	ansi_cursor(1);
+	term_setcursor(8, DLG_X + 1);
+	term_putstr(" High score! ", ATTR);
+	term_setcursor(9, DLG_X + 1);
+	term_cursor(1);
 
 	cur = 0;
 	for(;;) {
 		key = getch();
 		switch(key) {
 		case 27:
-			ansi_cursor(0);
+			term_cursor(0);
 			return -1;
 
 		case '\r':
@@ -198,17 +207,17 @@ static int name_dialog(char *buf)
 		}
 
 		s = buf;
-		ansi_setcursor(9, DLG_X + 1);
+		term_setcursor(9, DLG_X + 1);
 		for(i=0; i<DLG_W-2; i++) {
 			if(*s) {
-				ansi_ibmchar(*s++, 0x70);
+				term_ibmchar(*s++, 0x70);
 			} else {
-				ansi_ibmchar(' ', 0x70);
+				term_ibmchar(' ', 0x70);
 			}
 		}
-		ansi_setcursor(9, DLG_X + cur + 1);
+		term_setcursor(9, DLG_X + cur + 1);
 	}
 
-	ansi_cursor(0);
+	term_cursor(0);
 	return 0;
 }

@@ -23,7 +23,7 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 #include <assert.h>
 #include "game.h"
 #include "pieces.h"
-#include "ansi.h"
+#include "term.h"
 #include "scoredb.h"
 
 
@@ -67,7 +67,7 @@ static void erase_completed(void);
 static void draw_piece(int piece, const int *pos, int rot, int mode);
 static void clear(void);
 static void drawbg(void);
-static void drawpf(void);
+static void drawpf(int start_row);
 static void draw_line(int row, int blink);
 static void wrtile(int tileid);
 
@@ -199,10 +199,10 @@ int init_game(void)
 	prev_piece = 0;
 	next_piece = rand() % NUM_PIECES;
 
-	ansi_init();
-	ansi_setcolor(WHITE, BLACK);
-	ansi_clearscr();
-	ansi_cursor(0);
+	term_init();
+	term_setcolor(WHITE, BLACK);
+	term_clearscr();
+	term_cursor(0);
 
 	/* fill the screen buffer, and draw */
 	for(i=0; i<SCR_ROWS; i++) {
@@ -304,10 +304,10 @@ void cleanup_game(void)
 	if(cur_score.score) {
 		save_score(&cur_score);
 	}
-	ansi_reset();
+	term_reset();
 #if !defined(MSDOS) && !defined(__COM__)
-	/* don't call this on DOS because it will call ansi_init again */
-	ansi_clearscr();
+	/* don't call this on DOS because it will call term_init again */
+	term_clearscr();
 #endif
 }
 
@@ -403,7 +403,7 @@ static void update_cur_piece(void)
 	if(memcmp(pos, next_pos, sizeof pos) != 0 || cur_rot != prev_rot) {
 		draw_piece(cur_piece, pos, prev_rot, ERASE_PIECE);
 		draw_piece(cur_piece, next_pos, cur_rot, DRAW_PIECE);
-		ansi_setcursor(0, 0);
+		term_setcursor(0, 0);
 		fflush(stdout);
 		memcpy(pos, next_pos, sizeof pos);
 		prev_rot = cur_rot;
@@ -438,19 +438,19 @@ static void print_numbers(void)
 {
 	char buf[16];
 
-	ansi_setcolor(BLACK, WHITE);
+	term_setcolor(BLACK, WHITE);
 
-	ansi_setcursor(term_yoffs + 3, term_xoffs + 14 * 2);
+	term_setcursor(term_yoffs + 3, term_xoffs + 14 * 2);
 	sprintf(buf, "%10ld", cur_score.score);
-	ansi_putstr(buf, 7);
+	term_putstr(buf, 7);
 
-	ansi_setcursor(term_yoffs + 7, term_xoffs + 17 * 2);
+	term_setcursor(term_yoffs + 7, term_xoffs + 17 * 2);
 	sprintf(buf, "%2ld", cur_score.level);
-	ansi_putstr(buf, 7);
+	term_putstr(buf, 7);
 
-	ansi_setcursor(term_yoffs + 10, term_xoffs + 14 * 2);
+	term_setcursor(term_yoffs + 10, term_xoffs + 14 * 2);
 	sprintf(buf, "%8ld", cur_score.lines);
-	ansi_putstr(buf, 7);
+	term_putstr(buf, 7);
 }
 
 static void print_help(void)
@@ -458,11 +458,11 @@ static void print_help(void)
 	int i;
 
 	for(i=0; i<sizeof helpstr/sizeof *helpstr; i++) {
-		ansi_setcursor(i + 1, 0);
+		term_setcursor(i + 1, 0);
 		if(!i || show_help) {
-			ansi_putstr(helpstr[i], 0x70);
+			term_putstr(helpstr[i], 0x70);
 		} else {
-			ansi_putstr("                     ", 0x70);
+			term_putstr("                     ", 0x70);
 		}
 	}
 }
@@ -509,20 +509,20 @@ static void print_slist(void)
 	if(maxlen < 8) return;
 	if(maxlen > 127) maxlen = 127;
 
-	ansi_setcursor(1, x);
+	term_setcursor(1, x);
 	if(maxlen < 15) {
-		ansi_putstr("Sco(r)es", 0x70);
+		term_putstr("Sco(r)es", 0x70);
 	} else {
-		ansi_putstr("Toggle Sco(r)es", 0x70);
+		term_putstr("Toggle Sco(r)es", 0x70);
 	}
 
 	sc = scores;
 	for(i=0; i<10; i++) {
-		ansi_setcursor(i + 3, x);
+		term_setcursor(i + 3, x);
 		if(!show_highscores) {
 fillblank:	memset(fmtbuf, ' ', maxlen);
 			fmtbuf[maxlen] = 0;
-			ansi_putstr(fmtbuf, 0x70);
+			term_putstr(fmtbuf, 0x70);
 			if(sc) sc = sc->next;
 			continue;
 		}
@@ -557,7 +557,7 @@ fillblank:	memset(fmtbuf, ' ', maxlen);
 		fmtbuf[maxlen] = 0;
 		sc = sc->next;
 
-		ansi_putstr(fmtbuf, color);
+		term_putstr(fmtbuf, color);
 	}
 }
 
@@ -743,11 +743,11 @@ static void full_redraw(void)
 	drawbg();
 	print_slist();
 	print_numbers();
-	drawpf();
+	drawpf(0);
 	if(!gameover) {
 		draw_piece(next_piece, preview_pos, 0, DRAW_PIECE);
 		draw_piece(cur_piece, next_pos, cur_rot, DRAW_PIECE);
-		ansi_setcursor(0, 0);
+		term_setcursor(0, 0);
 		fflush(stdout);
 	}
 	wait_display();
@@ -763,7 +763,7 @@ static int spawn(void)
 
 	draw_piece(next_piece, preview_pos, 0, ERASE_PIECE);
 	draw_piece(r, preview_pos, 0, DRAW_PIECE);
-	ansi_setcursor(0, 0);
+	term_setcursor(0, 0);
 	fflush(stdout);
 
 	cur_piece = next_piece;
@@ -842,7 +842,7 @@ static void stick(int piece, const int *pos)
 
 static void erase_completed(void)
 {
-	int i, j, srow, drow;
+	int i, j, srow, drow, toprow;
 	int *pfstart = scr + PF_YOFFS * SCR_COLS + PF_XOFFS;
 	int *dptr;
 
@@ -857,17 +857,27 @@ static void erase_completed(void)
 		}
 	}
 
-	srow = drow = PF_ROWS - 1;
+	toprow = srow = drow = PF_ROWS - 1;
 	dptr = pfstart + drow * SCR_COLS;
 
 	for(i=0; i<PF_ROWS; i++) {
+		/* keep track of the topmost non-empty row */
+		for(j=0; j<PF_COLS; j++) {
+			if(dptr[j] != TILE_PF) {
+				toprow = drow;
+				break;
+			}
+		}
+
 		for(j=0; j<num_complines; j++) {
+			/* if this row is one of the completed lines, skip it during the copy */
 			if(complines[j] == srow) {
 				srow--;
 			}
 		}
 
 		if(srow < 0) {
+			/* when source row falls outside of the top, fill with empty tiles */
 			for(j=0; j<PF_COLS; j++) {
 				dptr[j] = TILE_PF;
 			}
@@ -882,7 +892,7 @@ static void erase_completed(void)
 		dptr -= SCR_COLS;
 	}
 
-	drawpf();
+	drawpf(toprow);
 	fflush(stdout);
 }
 
@@ -899,16 +909,16 @@ static void draw_piece(int piece, const int *pos, int rot, int mode)
 
 		if(y < 0) continue;
 
-		ansi_setcursor(term_yoffs + y, term_xoffs + x * 2);
+		term_setcursor(term_yoffs + y, term_xoffs + x * 2);
 		wrtile(tile);
 	}
 }
 
 static void clear(void)
 {
-	ansi_setcolor(WHITE, BLACK);
-	ansi_clearscr();
-	ansi_cursor(0);
+	term_setcolor(WHITE, BLACK);
+	term_clearscr();
+	term_cursor(0);
 }
 
 static void drawbg(void)
@@ -919,30 +929,30 @@ static void drawbg(void)
 	term_xoffs = term_width / 2 - SCR_COLS;
 
 	for(i=0; i<SCR_ROWS; i++) {
-		ansi_setcursor(term_yoffs + i, term_xoffs + 0);
+		term_setcursor(term_yoffs + i, term_xoffs + 0);
 		for(j=0; j<SCR_COLS; j++) {
 			wrtile(*sptr++);
 		}
 	}
 
-	ansi_setcursor(term_yoffs + 1, term_xoffs + 14 * 2);
-	ansi_setcolor(BLACK, WHITE);
-	ansi_putstr("S C O R E", 7);
+	term_setcursor(term_yoffs + 1, term_xoffs + 14 * 2);
+	term_setcolor(BLACK, WHITE);
+	term_putstr("S C O R E", 7);
 
-	ansi_setcursor(term_yoffs + 6, term_xoffs + 14 * 2);
-	ansi_putstr("L E V E L", 7);
+	term_setcursor(term_yoffs + 6, term_xoffs + 14 * 2);
+	term_putstr("L E V E L", 7);
 
-	ansi_setcursor(term_yoffs + 9, term_xoffs + 14 * 2);
-	ansi_putstr("L I N E S", 7);
+	term_setcursor(term_yoffs + 9, term_xoffs + 14 * 2);
+	term_putstr("L I N E S", 7);
 }
 
-static void drawpf(void)
+static void drawpf(int start_row)
 {
 	int i, j;
-	int *sptr = scr + PF_YOFFS * SCR_COLS + PF_XOFFS;
+	int *sptr = scr + (PF_YOFFS + start_row) * SCR_COLS + PF_XOFFS;
 
-	for(i=0; i<PF_ROWS; i++) {
-		ansi_setcursor(term_yoffs + i + PF_YOFFS, term_xoffs + PF_XOFFS * 2);
+	for(i=start_row; i<PF_ROWS; i++) {
+		term_setcursor(term_yoffs + i + PF_YOFFS, term_xoffs + PF_XOFFS * 2);
 		for(j=0; j<PF_COLS; j++) {
 			wrtile(sptr[j]);
 		}
@@ -954,7 +964,7 @@ static void draw_line(int row, int blink)
 {
 	int i;
 
-	ansi_setcursor(term_yoffs + row + PF_YOFFS, term_xoffs + PF_XOFFS * 2);
+	term_setcursor(term_yoffs + row + PF_YOFFS, term_xoffs + PF_XOFFS * 2);
 
 	if(blink) {
 		int *sptr = scr + (row + PF_YOFFS) * SCR_COLS + PF_XOFFS;
@@ -991,6 +1001,6 @@ static void wrtile(int tileid)
 #endif
 		}
 
-		ansi_ibmchar(cc, ca);
+		term_ibmchar(cc, ca);
 	}
 }
