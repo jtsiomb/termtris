@@ -995,10 +995,11 @@ static void wrtile(int tileid)
 		if(use_gfxchar && (cc == '[' || cc == ']')) {
 			ca <<= 4;	/* for gfx blocks bg->fg and bg=0 */
 #if defined(MSDOS) || defined(__COM__)
-			if(!ca) ca = 0x80;	/* special case for T which has black bg */
-#else
-			if(!ca) ca = 0x70;	/* special case for T which has black bg */
+			if(term_type == TERM_PCBIOS) {
+				if(!ca) ca = 0x80;	/* special case for T which has black bg */
+			} else
 #endif
+			if(!ca) ca = 0x70;	/* special case for T which has black bg */
 		}
 
 		term_ibmchar(cc, ca);

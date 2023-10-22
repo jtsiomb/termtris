@@ -38,17 +38,23 @@ enum {
 enum { BLACK, BLUE, GREEN, CYAN, RED, MAGENTA, YELLOW, WHITE };
 #define BOLD	8
 
-void term_init(void);
+enum {
+	TERM_ANSI,
+	TERM_VT52,
+	TERM_PCBIOS = 0xb105
+};
+
+extern int term_type;
 
 extern void (*term_reset)(void);
 extern void (*term_clearscr)(void);
 extern void (*term_setcursor)(int row, int col);
 extern void (*term_cursor)(int show);
 extern void (*term_setcolor)(int fg, int bg);
-
 /* convert a PC cga/ega/vga char+attr to an TERM sequence and write it to stdout */
 extern void (*term_ibmchar)(unsigned char c, unsigned char attr);
 
+void term_init(void);
 void term_putstr(const char *s, unsigned char attr);
 
 #endif	/* TERM_H_ */

@@ -27,6 +27,7 @@ void pcbios_init(void);
 #endif
 
 char *termenv;
+int term_type;
 
 void (*term_reset)(void);
 void (*term_clearscr)(void);

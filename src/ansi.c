@@ -31,7 +31,6 @@ void ansi_cursor(int show);
 void ansi_setcolor(int fg, int bg);
 void ansi_ibmchar(unsigned char c, unsigned char attr);
 
-
 int no_vtdetect;
 
 enum { CS_ASCII, CS_GRAPH, CS_CUSTOM };
@@ -148,6 +147,7 @@ void ansi_init(void)
 		printf("done\n");
 	}
 
+	term_type = TERM_ANSI;
 	term_reset = ansi_reset;
 	term_clearscr = ansi_clearscr;
 	term_setcursor = ansi_setcursor;

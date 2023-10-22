@@ -32,6 +32,7 @@ static int gmode;
 
 void vt52_init(void)
 {
+	term_type = TERM_VT52;
 	term_reset = vt52_reset;
 	term_clearscr = vt52_clearscr;
 	term_setcursor = vt52_setcursor;
