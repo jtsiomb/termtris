@@ -1,25 +1,35 @@
-Termtris - tetris game for ANSI/VT100 terminals
-===============================================
+Termtris - tetris game for terminals
+====================================
 
 ![shots](http://nuclear.mutantstargoat.com/sw/termtris/img/termtris-banner.png)
 
 About
 -----
-Termtris runs on UNIX systems and requires an ANSI or VT100-compatible terminal
-for input and output. It has been tested with a VT420, xterm, rxvt, the Linux
-console, and kermit running on MS-DOS over a serial link, but it should work on
-any terminal capable of interpreting ANSI escape sequences for cursor
-addressing, character set selection, and color attributes.
 
-To run on a terminal other than the controlling terminal, simply specify the
-device using the `-t` commandline option.
-
-Termtris also runs on DOS now. It will run on any IBM PC compatible with any
-graphics card (MDA, CGA, EGA, VGA, SVGA).
+Termtris is a text-based tetris game, initially written for UNIX systems and
+ANSI/VT100-compatible terminals, but later extended to support more terminal
+types, operating systems, and text-mode video hardware.
 
 I always liked the GameBoy tetris best. So I made termtris as close as possible
 to that version gameplay-wise.
 
+Termtris can run in color or monochrome mode, and can load custom character sets
+for graphical blocks, if there is support for that.
+
+There are two main flavors of termtris which can be compiled from the same
+source tree:
+
+  1. The original **UNIX version** which runs on terminals, and can also be
+     compiled for windows using a POSIX emulation layer such as *msys2* or
+    *cygwin*. It has been tested on multiple UNIX systems (GNU/Linux, FreeBSD, IRIX,
+    Solaris, MacOSX), and multiple terminals (VT52, VT100, VT220, VT420,
+    MS 6102), and terminal emulators (xterm, linux console, kermit, iTerm2).
+
+  2. The **DOS version** which uses the PC BIOS to access display and keyboard,
+    but can also optionally work with the same terminals supported by the UNIX
+    version.
+
+### Links
   - website: http://nuclear.mutantstargoat.com/sw/termtris
   - source repository: https://github.com/jtsiomb/termtris
 
