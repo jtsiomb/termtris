@@ -396,15 +396,106 @@ long update(long msec)
 	return tick_interval - dt;
 }
 
+#define MAX_TILE_OPS	32
+struct tileop {
+	int op;
+	int x, y;
+};
+
+static int diff_piece(int pp, const int *ppos, int prot, int np, const int *npos, int nrot, struct tileop *ops)
+{
+	int i, j, num, inval = 0;
+	unsigned char *p = pieces[pp][prot];
+	struct tileop tmpop, *op = ops;
+
+	for(i=0; i<4; i++) {
+		op->op = ERASE_PIECE;
+		op->x = ppos[1] + BLKX(*p);
+		op->y = ppos[0] + BLKY(*p);
+		if(op->y >= 0) {
+			op++;
+		}
+		p++;
+	}
+	p = pieces[np][nrot];
+	for(i=0; i<4; i++) {
+		op->op = DRAW_PIECE;
+		op->x = npos[1] + BLKX(*p);
+		op->y = npos[0] + BLKY(*p);
+		if(op->y >= 0) {
+			op++;
+		}
+		p++;
+	}
+
+	/* find double-changes to the same tile */
+	num = op - ops;
+	for(i=0; i<num; i++) {
+		for(j=i+1; j<num; j++) {
+			if(ops[j].x == ops[i].x && ops[j].y == ops[i].y) {
+				ops[i].op = -1;	/* cancel the first (erase) */
+				inval++;
+			}
+		}
+	}
+
+	/* sort by op-valid,row,col */
+#define OP_ORDER(o)	((o).op == -1 ? 0x7fff : (((o).y << 7) | (o).x))
+	for(i=0; i<num-1; i++) {
+		for(j=i+1; j<num; j++) {
+			unsigned int ordi = OP_ORDER(ops[i]);
+			unsigned int ordj = OP_ORDER(ops[j]);
+			if(ordj < ordi) {
+				tmpop = ops[i];
+				ops[i] = ops[j];
+				ops[j] = tmpop;
+			}
+		}
+	}
+
+	/* drop the invalid ops at the end */
+	return num - inval;
+}
+
+static void draw_tileops(int piece, struct tileop *ops, int num)
+{
+	int i, tile, x = -1, y = -1;
+	struct tileop *op = ops;
+
+	for(i=0; i<num; i++) {
+		if(op->op == -1) {
+			op++;
+			continue;
+		}
+
+		/* if the new op is not under the cursor, handle cursor movement */
+		if(op->x != x || op->y != y) {
+			term_setcursor(term_yoffs + op->y + PF_YOFFS, term_xoffs +
+					(op->x + PF_XOFFS) * 2);
+			x = op->x;
+			y = op->y;
+		}
+		tile = op->op == ERASE_PIECE ? TILE_PF : FIRST_PIECE_TILE + piece;
+		wrtile(tile);
+		x++;
+		op++;
+	}
+}
+
 static void update_cur_piece(void)
 {
+	int numops;
+	struct tileop ops[MAX_TILE_OPS];
+
 	if(cur_piece < 0) return;
 
-	if(memcmp(pos, next_pos, sizeof pos) != 0 || cur_rot != prev_rot) {
-		draw_piece(cur_piece, pos, prev_rot, ERASE_PIECE);
-		draw_piece(cur_piece, next_pos, cur_rot, DRAW_PIECE);
+	if((numops = diff_piece(cur_piece, pos, prev_rot, cur_piece, next_pos, cur_rot, ops)) > 0) {
+		draw_tileops(cur_piece, ops, numops);
+
+		/* for terminals which can't hide the cursor, move it out of the way */
 		term_setcursor(0, 0);
 		fflush(stdout);
+
 		memcpy(pos, next_pos, sizeof pos);
 		prev_rot = cur_rot;
 	}
@@ -756,15 +847,18 @@ static void full_redraw(void)
 static int spawn(void)
 {
 	int r, tries = 2;
+	int numops;
+	struct tileop ops[MAX_TILE_OPS];
 
 	do {
 		r = rand() % NUM_PIECES;
 	} while(tries-- > 0 && (r | prev_piece | next_piece) == prev_piece);
 
-	draw_piece(next_piece, preview_pos, 0, ERASE_PIECE);
-	draw_piece(r, preview_pos, 0, DRAW_PIECE);
-	term_setcursor(0, 0);
-	fflush(stdout);
+	if((numops = diff_piece(next_piece, preview_pos, 0, r, preview_pos, 0, ops)) > 0) {
+		draw_tileops(r, ops, numops);
+		term_setcursor(0, 0);
+		fflush(stdout);
+	}
 
 	cur_piece = next_piece;
 	next_piece = r;
