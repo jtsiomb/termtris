@@ -164,8 +164,10 @@ void ansi_recall(void)
 
 void ansi_reset(void)
 {
-	fputs("\033[0m", stdout);
-	fputs("\033[!p", stdout);
+	fputs("\033[0m", stdout);	/* select graphics rendition (SGR) normal */
+	fputs("\033[!p", stdout);	/* soft terminal reset (DECSTR) */
+	/* DECSTR disables auto-wrap which is annoying ... */
+	fputs("\033[?7h", stdout);	/* set-mode auto-wrap (DECAWN) */
 	fflush(stdout);
 }
 
