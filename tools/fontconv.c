@@ -27,17 +27,17 @@ int main(int argc, char **argv)
 }
 
 enum {
-	FONT_7X10_VT2	= 0x70a,
+	FONT_8X10_VT2	= 0x80a,
 	FONT_15X12_VT3	= 0xf0c,
 	FONT_10X16_VT4	= 0xa10,
 	FONT_8X14_EGA	= 0x80e,
 	FONT_8X16_VGA	= 0x810
 };
 
-#define FONT_VALID(x)	((x) == FONT_7X10_VT2 || (x) == FONT_10X16_VT4 || \
+#define FONT_VALID(x)	((x) == FONT_8X10_VT2 || (x) == FONT_10X16_VT4 || \
 		(x) == FONT_15X12_VT3 || (x) == FONT_8X14_EGA || (x) == FONT_8X16_VGA)
 #define FONT_IS_VT(x)	(!FONT_IS_PC(x))
-#define FONT_IS_PC(x)	(((x) >> 8) == 8)
+#define FONT_IS_PC(x)	((x) == FONT_8X16_VGA || (x) == FONT_8X14_EGA)
 
 int proc_font(const char *fname)
 {
@@ -122,7 +122,7 @@ void glyph_to_sixel(int glyph[MAX_ROWS][MAX_COLS], int width, int height, int cn
 
 	fontsz = (width << 8) | height;
 	switch(fontsz) {
-	case FONT_7X10_VT2:
+	case FONT_8X10_VT2:
 		printf("\\033P1;%d;1;4{ @", cnum - 32);
 		break;
 

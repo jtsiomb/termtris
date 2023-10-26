@@ -76,9 +76,9 @@ static unsigned char cmap[] = {0, 4, 2, 6, 1, 5, 3, 7};
 static unsigned char cur_attr = 0xff;
 static int cur_cs = CS_ASCII;
 
-static const char *sixels7x10[] = {
-	"~~@@@pH/NNGGGGH",
-	"Hp@@@~~/HGGGGNN"
+static const char *sixels8x10[] = {
+	"~~jvXf\\j/^FQDQFPE",
+	"t~RlZd^@/RERDV?V?"
 };
 static const char *sixels10x16[] = {
 	"~~f^jVzf^j/~~mXfYtmjY/FFDAHBGBAH",
@@ -89,7 +89,7 @@ static const char *sixels15x12[] = {
 	"tJdZdJtJdZYdQlQ/QLQDYDQLQHHEHAL"
 };
 static char custom_char[] = {"[]"};
-#define NUM_CUSTOM	(sizeof sixels7x10 / sizeof *sixels7x10)
+#define NUM_CUSTOM	2
 
 void ansi_init(void)
 {
@@ -128,9 +128,9 @@ void ansi_init(void)
 		for(i=0; i<NUM_CUSTOM; i++) {
 			switch(vtclass) {
 			case 62:
-				/* VT220 mode, 7x10 */
-				printf("\033P1;%d;1;4;0;2{ @%s\033\\", (int)custom_char[i] - 32,
-						sixels7x10[i]);
+				/* VT220 mode, 8x10 */
+				printf("\033P1;%d;1;4{ @%s\033\\", (int)custom_char[i] - 32,
+						sixels8x10[i]);
 				break;
 			case 63:
 				/* VT320 mode, 15x12 */
