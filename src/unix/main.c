@@ -202,7 +202,7 @@ int init(void)
 
 #ifdef USE_JOYSTICK
 	if(jsdev != -1) {
-		char name[256];
+		char name[256] = {0};
 		if(ioctl(jsdev, JSIOCGNAME(sizeof name), name) != -1) {
 			fprintf(stderr, "Using joystick %s: %s\n", jsdevfile, name);
 		}
