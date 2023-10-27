@@ -33,6 +33,7 @@ int use_bell;
 int monochrome;
 int use_gfxchar;
 int onlyascii;
+int rotstep = 1;
 int term_width, term_height;
 
 
@@ -758,7 +759,7 @@ void game_input(int c)
 	case ' ':
 		if(!pause) {
 			prev_rot = cur_rot;
-			cur_rot = (cur_rot + 1) & 3;
+			cur_rot = (cur_rot + rotstep) & 3;
 			if(collision(cur_piece, next_pos)) {
 				cur_rot = prev_rot;
 			}

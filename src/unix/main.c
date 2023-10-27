@@ -275,6 +275,10 @@ int parse_args(int argc, char **argv)
 					username = argv[i];
 					break;
 
+				case 'r':
+					rotstep = 3;
+					break;
+
 				case 's':
 					printf("High Scores\n-----------\n");
 					print_scores(10);
@@ -317,6 +321,7 @@ void print_usage(const char *argv0)
 	printf("  -T: don't use custom block graphics, inhibit auto-detection\n");
 	printf("  -a: use only ASCII characters\n");
 	printf("  -u <name>: override username for high scores\n");
+	printf("  -r: reverse (counter-clockwise) rotation\n");
 	printf("  -s: print top 10 high-scores and exit\n");
 	printf("  -h: print usage information and exit\n");
 	printf("Controls:\n");
