@@ -44,6 +44,7 @@ enum {
 	TERM_PCBIOS = 0xb105
 };
 
+extern char *termenv;
 extern int term_type;
 
 extern void (*term_reset)(void);

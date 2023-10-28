@@ -56,6 +56,10 @@ void term_init(void)
 		pcbios_init();
 		return;
 	}
+#else
+	if(!termenv) {
+		goto ansi;	/* if TERM is unset, assume ANSI */
+	}
 #endif
 
 	if(termenv[0] == 'v' && termenv[1] == 't') {
@@ -67,6 +71,7 @@ void term_init(void)
 		}
 	}
 
+ansi:
 	/* for VT100 or higher, and every unknown terminal, use ANSI */
 	ansi_init();
 }

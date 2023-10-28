@@ -65,7 +65,7 @@ static void read_joystick(void);
 static void update_joystick(void);
 #endif
 
-extern int no_vtdetect;		/* defined in ansi.c */
+extern int no_autogfx;		/* defined in ansi.c */
 extern char *username;		/* defined in scoredb.c */
 
 
@@ -260,7 +260,7 @@ int parse_args(int argc, char **argv)
 
 				case 'T':
 					use_gfxchar = 0;
-					no_vtdetect = 1;
+					no_autogfx = 1;
 					break;
 
 				case 'a':

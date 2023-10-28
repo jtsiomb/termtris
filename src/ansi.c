@@ -31,7 +31,7 @@ void ansi_cursor(int show);
 void ansi_setcolor(int fg, int bg);
 void ansi_ibmchar(unsigned char c, unsigned char attr);
 
-int no_vtdetect;
+int no_autogfx;
 
 enum { CS_ASCII, CS_GRAPH, CS_CUSTOM };
 
@@ -91,34 +91,66 @@ static const char *sixels15x12[] = {
 static char custom_char[] = {"[]"};
 #define NUM_CUSTOM	2
 
+
 void ansi_init(void)
 {
 	int i, val, vtclass = -1;
-	char buf[64], *env;
+	char buf[64];
 
-	if(!no_vtdetect) {
-		/* detect the terminal type
-		 * if there is a TERM env var with "vtxxx" where xxx >= 200, enable
-		 * graphical blocks and set vtclass accordingly.
-		 */
-		if((env = getenv("TERM")) && tolower(env[0]) == 'v' && tolower(env[1]) == 't'
-				&& (val = atoi(env + 2)) >= 200 && val < 600) {
+	/* detect the terminal type
+	 * if there is a TERM env var with "vtxxx" where xxx >= 200, enable
+	 * graphical blocks and set vtclass accordingly.
+	 */
+	if(termenv && termenv[0] == 'v' && termenv[1] == 't') {
+		if((val = atoi(termenv + 2)) >= 200 && val < 600 && !no_autogfx) {
 			use_gfxchar = 1;
-			vtclass = 60 + val / 100;
+		}
+		vtclass = 60 + val / 100;
+	}
+
+	/* unknown or unset TERM, try asking for the device attributes string */
+	if(vtclass == -1) {
+		char *ptr;
+		int have_softchar = 0;
+
+		printf("\033[c\n");
+		fflush(stdout);
+		if(fgets(buf, sizeof buf, stdin) && memcmp(buf, "\033[?", 3) == 0) {
+			ptr = buf + 3;
+
+			for(;;) {
+				switch((val = atoi(ptr))) {
+				case 7:
+					have_softchar = 1;
+					break;
+
+				default:
+					if(val >= 62 && val < 70) {
+						/* assume it's a VT class */
+						vtclass = val;
+					}
+				}
+				while(*ptr && *ptr != 'c' && *ptr != ';') ptr++;
+				if(*ptr != ';') break;
+				ptr++;
+			}
+
+			if(vtclass != -1) {
+				/* found a vt class, treat the rest as valid */
+				fprintf(stderr, "detected VT class %d [DRCS:%d]\n",
+						vtclass, have_softchar);
+
+				if(!no_autogfx && (vtclass >= 62 || have_softchar)) {
+					use_gfxchar = 1;
+				}
+			}
 		}
 	}
 
 	if(use_gfxchar) {
 		if(vtclass == -1) {
-			/* unknown or unset TERM, try asking for the device attributes string */
-			printf("\033[c\n");
-			fflush(stdout);
-			if(fgets(buf, sizeof buf, stdin) && sscanf(buf, "\033[?%d", &val) == 1) {
-				vtclass = val;
-			} else {
-				vtclass = 64;	/* default to VT420 */
-				fprintf(stderr, "Custom graphics charset enabled, but failed to detect terminal type. Assuming VT420 or higher.\n");
-			}
+			vtclass = 64;	/* default to VT420 */
+			fprintf(stderr, "Custom graphics charset enabled, but failed to detect terminal type. Assuming VT420 or higher.\n");
 		}
 
 		/* load custom character set */
