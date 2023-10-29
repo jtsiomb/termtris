@@ -85,8 +85,8 @@ static const char *sixels10x16[] = {
 	"VZvNzfZvR@/d\\jTyTmtGA/AHB@IBGB?A"
 };
 static const char *sixels15x12[] = {
-	"~~JtJdZdJt~~dYd/~~TITIDYDQ^^IDI",
-	"tJdZdJtJdZYdQlQ/QLQDYDQLQHHEHAL"
+	"~~~~nRNpB^~~~~V/^^^NGN@AN@NNNFC",
+	"Jf|Jb^bLZzdr]dP/B@MJ?KF?LF@?FD?"
 };
 static char custom_char[] = {"[]"};
 #define NUM_CUSTOM	2
