@@ -305,6 +305,7 @@ void cleanup_game(void)
 	if(cur_score.score) {
 		save_score(&cur_score);
 	}
+	term_cursor(1);
 	term_reset();
 #if !defined(MSDOS) && !defined(__COM__)
 	/* don't call this on DOS because it will call term_init again */
