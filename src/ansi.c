@@ -115,8 +115,11 @@ void ansi_init(void)
 
 		printf("\033[c\n");
 		fflush(stdout);
-		if(fgets(buf, sizeof buf, stdin) && memcmp(buf, "\033[?", 3) == 0) {
-			ptr = buf + 3;
+		if(fgets(buf, sizeof buf, stdin) && (memcmp(buf, "\033[?", 3) == 0 ||
+				memcmp(buf, "\233?", 2) == 0)) {
+			ptr = buf + (buf[0] == '\033' ? 3 : 2);
+
+			fprintf(stderr, "term id: %s\n", ptr);
 
 			for(;;) {
 				switch((val = atoi(ptr))) {
@@ -140,7 +143,7 @@ void ansi_init(void)
 				fprintf(stderr, "detected VT class %d [DRCS:%d]\n",
 						vtclass, have_softchar);
 
-				if(!no_autogfx && (vtclass >= 62 || have_softchar)) {
+				if(!no_autogfx && have_softchar) {
 					use_gfxchar = 1;
 				}
 			}
