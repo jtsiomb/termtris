@@ -77,16 +77,16 @@ static unsigned char cur_attr = 0xff;
 static int cur_cs = CS_ASCII;
 
 static const char *sixels8x10[] = {
-	"~~jvXf\\j/^FQDQFPE",
-	"t~RlZd^@/RERDV?V?"
+	"~~jvXf\\j/NFADAF@E",
+	"t~RlZd^@/BEBDF?F?"
 };
 static const char *sixels10x16[] = {
 	"~~f^jVzf^j/~~mXfYtmjY/FFDAHBGBAH",
 	"VZvNzfZvR@/d\\jTyTmtGA/AHB@IBGB?A"
 };
 static const char *sixels15x12[] = {
-	"~~~~nRNpB^~~~~V/^^^NGN@AN@NNNFC",
-	"Jf|Jb^bLZzdr]dP/B@MJ?KF?LF@?FD?"
+	"~~~~nRNpB^jFxB~/^^^NGN@AN@?N@EK",
+	"Jf|Jb^bLZzV@@??" "/B@MJ?KF?LFL????"
 };
 static char custom_char[] = {"[]"};
 #define NUM_CUSTOM	2
