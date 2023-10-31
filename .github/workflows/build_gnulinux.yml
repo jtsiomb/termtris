@@ -1,0 +1,26 @@
+name: GNU/Linux build
+
+on:
+  push:
+  pull_request:
+  workflow_dispatch:
+
+jobs:
+  build:
+
+    runs-on: ubuntu-latest
+
+    steps:
+    - uses: actions/checkout@v3
+
+    - name: build
+      run: |
+        make
+
+    - uses: actions/upload-artifact@v3
+      with:
+        name: termtris-gnulinux
+        path: |
+          termtris
+
+# vi:ts=2 sts=2 sw=2 expandtab:
