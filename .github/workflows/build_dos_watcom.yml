@@ -20,12 +20,16 @@ jobs:
         path: ow
         key: openwatcom-cache1
 
-    - name: install toolchain
+    - name: install watcom C toolchain
       if: steps.cache-tc.outputs.cache-hit != 'true'
       run: |
         wget http://mutantstargoat.com/~nuclear/ow_bundle.tar.gz
         tar xzvf ow_bundle.tar.gz
         sed -i 's/HOME/GITHUB_WORKSPACE/g' ow/owsetenv-dos.sh
+
+    - name: install nasm assembler
+      run: |
+        sudo apt-get install nasm
 
     - name: build
       run: |
