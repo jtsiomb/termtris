@@ -562,7 +562,7 @@ static void print_help(void)
 
 static char *clampstr(const char *s, int len)
 {
-	int i, full_len;
+	int i;
 	static char buf[64];
 
 	if(len > 63) len = 63;
@@ -572,7 +572,7 @@ static char *clampstr(const char *s, int len)
 		return buf;
 	}
 
-	if((full_len = strlen(s)) <= len) {
+	if(strlen(s) <= len) {
 		strcpy(buf, s);
 		return buf;
 	}
