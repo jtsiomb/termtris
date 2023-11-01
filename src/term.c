@@ -22,6 +22,7 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 void vt52_init(void);
 void ansi_init(void);
+void adm3_init(void);
 #if defined(MSDOS) || defined(__COM__)
 void pcbios_init(void);
 #endif
@@ -43,11 +44,16 @@ void term_init(void)
 	char *env;
 	int vtnum;
 
-	if((env = getenv("TERM")) && (termenv = strdup(env))) {
-		env = termenv;
-		while(*env) {
-			*env = tolower(*env);
-			env++;
+	if((env = getenv("TERM"))) {
+		int len = strlen(env);
+		if((termenv = calloc(1, len < 8 ? 8 : len + 1))) {
+			strcpy(termenv, env);
+
+			env = termenv;
+			while(*env) {
+				*env = tolower(*env);
+				env++;
+			}
 		}
 	}
 
@@ -67,12 +73,19 @@ void term_init(void)
 
 		if(vtnum >= 52 && vtnum < 100) {
 			vt52_init();
-			return;
+		} else {
+			ansi_init();
 		}
+		return;
+	}
+
+	if(memcmp(termenv, "adm3", 4) == 0) {
+		adm3_init();
+		return;
 	}
 
 ansi:
-	/* for VT100 or higher, and every unknown terminal, use ANSI */
+	/* for unknown terminals, try to use ANSI */
 	ansi_init();
 }
 

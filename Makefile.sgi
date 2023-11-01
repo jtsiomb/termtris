@@ -4,7 +4,8 @@ BINDIR = bin
 SCOREDIR = /var/games/termtris
 # ---------------------
 
-obj = src/unix/main.o src/unix/scoredb.o src/game.o src/term.o src/ansi.o src/vt52.o
+obj = src/unix/main.o src/unix/scoredb.o src/game.o src/term.o src/ansi.o \
+	  src/vt52.o src/adm3.o
 bin = termtris
 
 CFLAGS = -O2 -g3 -DSCOREDIR=\"$(SCOREDIR)\" -DNO_INTTYPES_H -Isrc
