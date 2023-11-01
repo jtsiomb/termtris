@@ -93,7 +93,7 @@ details.
 Download
 --------
 ### Source code
-Current release (1.8.2): http://nuclear.mutantstargoat.com/sw/termtris/termtris-1.8.2.tar.gz
+Current release (1.9): http://nuclear.mutantstargoat.com/sw/termtris/termtris-1.9.tar.gz
 
 Releases are also mirrored on github: https://github.com/jtsiomb/termtris/releases
 
@@ -103,12 +103,25 @@ repository:
     git clone https://github.com/jtsiomb/termtris
 
 ### Pre-compiled
-Pre-compiled binaries might be available in your package management system of
+Building from source is highly recommended. If however you want to try a
+pre-compiled binary, you might be able to find something for your system in:
+http://nuclear.mutantstargoat.com/sw/termtris/bin
+Not all releases are compiled for all platforms. Any binaries available here are
+provided purely for convenience. Do not open bug reports about a pre-compiled
+binary not running, or misbehaving on your system; compile it yourself first.
+
+Another source of binaries, is the github automated builds. Head over to the
+"actions" page (https://github.com/jtsiomb/termtris/actions), choose the latest
+successful build for your platform, and download the binary from the "artifacts"
+section at the bottom.
+
+Pre-compiled binaries might also be available in your package management system of
 choice, but please do not submit any bug reports without first trying to build
 termtris yourself from the latest git source code.
   - Debian/Ubuntu/Mint: `apt-get install termtris`
 
-Pre-compiled DOS binary of termtris 1.8.2: http://nuclear.mutantstargoat.com/sw/termtris/termtris.com
+The latest pre-compiled DOS binary (currently 1.9) is always available at:
+http://nuclear.mutantstargoat.com/sw/termtris/termtris.com
 
 Build (UNIX)
 ------------
