@@ -20,7 +20,6 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 #include <string.h>
 #include <time.h>
 #include <inttypes.h>
-#include <assert.h>
 #include "game.h"
 #include "pieces.h"
 #include "term.h"
@@ -508,8 +507,6 @@ static void addscore(int nlines)
 {
 	static const int stab[] = {40, 100, 300, 1200};	/* bonus per line completed */
 
-	assert(nlines < 5);
-
 	cur_score.score += stab[nlines - 1] * (cur_score.level + 1);
 	cur_score.lines += nlines;
 
@@ -678,6 +675,12 @@ static void runesc(int csi, char *buf)
 		default:
 			break;
 		}
+		return;
+	}
+
+	if(strcmp(buf, "28~") == 0) {
+		/* help key */
+		game_input('h');
 	}
 }
 
