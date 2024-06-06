@@ -1,0 +1,16 @@
+obj = src/win/main.obj src/win/scoredb.obj src/game.obj src/term.obj \
+	src/ansi.obj src/vt52.obj src/adm3.obj
+bin = termtris.exe
+
+CC = cl
+LD = link
+CFLAGS = -Zi -Isrc
+
+$(bin): $(obj)
+	$(LD) -out:$@ $(obj) $(LDFLAGS)
+
+.c.obj:
+	$(CC) $(CFLAGS) -Fo$@ -c $**
+
+clean:
+	del $(obj) $(bin)
