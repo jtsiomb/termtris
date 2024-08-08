@@ -169,13 +169,13 @@ void ansi_init(void)
 				break;
 			case 63:
 				/* VT320 mode, 15x12 */
-				printf("\033P1;%d;1;15;0;2;12{ @%s\033\\", (int)custom_char[i] - 32,
+				printf("\033P1;%d;1;15;0;2;12;0{ @%s\033\\", (int)custom_char[i] - 32,
 						sixels15x12[i]);
 				break;
 			case 64:
 			default:
 				/* VT420 mode, 10x16 */
-				printf("\033P1;%d;1;10;0;2;16{ @%s\033\\", (int)custom_char[i] - 32,
+				printf("\033P1;%d;1;10;0;2;16;0{ @%s\033\\", (int)custom_char[i] - 32,
 						sixels10x16[i]);
 			}
 		}
