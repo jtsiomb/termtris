@@ -24,6 +24,7 @@ extern int use_bell;
 extern int monochrome;
 extern int use_gfxchar;
 extern int onlyascii;
+extern int blackpf;
 extern int rotstep;
 
 extern int term_width, term_height;

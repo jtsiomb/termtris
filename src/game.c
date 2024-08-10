@@ -32,6 +32,7 @@ int use_bell;
 int monochrome;
 int use_gfxchar;
 int onlyascii;
+int blackpf;
 int rotstep = 1;
 int term_width, term_height;
 
@@ -94,13 +95,13 @@ enum {
 	TILE_PF,
 	TILE_PFSEP,
 	TILE_GAMEOVER,
+	TILE_LPIECE,
+	TILE_JPIECE,
 	TILE_IPIECE,
 	TILE_OPIECE,
-	TILE_JPIECE,
-	TILE_LPIECE,
+	TILE_ZPIECE,
 	TILE_SPIECE,
 	TILE_TPIECE,
-	TILE_ZPIECE,
 	TILE_FRM_TL,
 	TILE_FRM_TR,
 	TILE_FRM_BL,
@@ -111,7 +112,7 @@ enum {
 	TILE_FRM_LVLINE,
 	TILE_FRM_RVLINE
 };
-#define FIRST_PIECE_TILE	TILE_IPIECE
+#define FIRST_PIECE_TILE	TILE_LPIECE
 
 static uint16_t tiles[][2] = {
 	{ CHAR(' ', BLACK, BLACK), CHAR(' ', BLACK, BLACK) },			/* black tile */
@@ -203,6 +204,13 @@ int init_game(void)
 	term_setcolor(WHITE, BLACK);
 	term_clearscr();
 	term_cursor(0);
+
+	if(blackpf) {
+		tiles[TILE_PF][0] = CHAR(' ', BLACK, BLACK);
+		tiles[TILE_PF][1] = CHAR(' ', BLACK, BLACK);
+		tiles[TILE_TPIECE][0] = CHAR('[', BLACK, WHITE);
+		tiles[TILE_TPIECE][1] = CHAR(']', BLACK, WHITE);
+	}
 
 	/* fill the screen buffer, and draw */
 	for(i=0; i<SCR_ROWS; i++) {

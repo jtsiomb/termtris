@@ -267,6 +267,10 @@ int parse_args(int argc, char **argv)
 					onlyascii = 1;
 					break;
 
+				case 'd':
+					blackpf = 1;
+					break;
+
 				case 'u':
 					if(!argv[++i]) {
 						fprintf(stderr, "-u must be followed by a user name\n");
@@ -320,6 +324,7 @@ void print_usage(const char *argv0)
 	printf("  -g: use custom block graphics (default: auto)\n");
 	printf("  -T: don't use custom block graphics, inhibit auto-detection\n");
 	printf("  -a: use only ASCII characters\n");
+	printf("  -d: use dark playfield in color mode (default: white)\n");
 	printf("  -u <name>: override username for high scores\n");
 	printf("  -r: reverse (counter-clockwise) rotation\n");
 	printf("  -s: print top 10 high-scores and exit\n");

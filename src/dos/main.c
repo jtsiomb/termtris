@@ -133,6 +133,10 @@ int parse_args(int argc, char **argv)
 					use_gfxchar = 0;
 					break;
 
+				case 'd':
+					blackpf = 1;
+					break;
+
 				case 'r':
 					rotstep = 3;
 					break;
@@ -172,6 +176,7 @@ void print_usage(const char *argv0)
 	printf(" -m: monochrome output (default: off)\n");
 	printf(" -g: use graphical blocks (default: EGA/VGA)\n");
 	printf(" -T: use text blocks (default: MDA/CGA)\n");
+	printf(" -d: use dark playfield in color mode (default: white)\n");
 	printf(" -r: reverse (counter-clockwise) rotation\n");
 	printf(" -s: print top 10 high-scores and exit\n");
 	printf(" -h: print usage information and exit\n\n");
