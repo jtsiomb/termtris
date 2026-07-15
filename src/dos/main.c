@@ -1,6 +1,6 @@
 /*
 Termtris - a tetris game for ANSI/VT100 terminals
-Copyright (C) 2019-2023  John Tsiombikas <nuclear@member.fsf.org>
+Copyright (C) 2019-2026  John Tsiombikas <nuclear@member.fsf.org>
 
 This program is free software: you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
@@ -22,6 +22,7 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 #include <i86.h>
 #include "game.h"
 #include "scoredb.h"
+#include "joy.h"
 
 
 int init(void);
@@ -32,6 +33,8 @@ long get_msec(void);
 
 long timer_ticks;
 const char *progpath;
+
+static int opt_use_joy = 1;
 
 /* defined in video.asm */
 void detect_video(void);
@@ -79,6 +82,11 @@ int main(int argc, char **argv)
 			if(quit) goto end;
 		}
 
+		if(have_joy) {
+			joy_update();
+			joy_keyemu();
+		}
+
 		msec = get_msec();
 		next = update(msec);
 	}
@@ -96,6 +104,10 @@ int init(void)
 {
 	term_width = 80;
 	term_height = 25;
+
+	if(opt_use_joy) {
+		joy_detect();
+	}
 
 	init_timer();
 
@@ -141,6 +153,10 @@ int parse_args(int argc, char **argv)
 					rotstep = 3;
 					break;
 
+				case 'j':
+					opt_use_joy ^= 1;
+					break;
+
 				case 's':
 					printf("High Scores\n-----------\n");
 					print_scores(10);
@@ -179,6 +195,7 @@ void print_usage(const char *argv0)
 	printf(" -d: use dark playfield in color mode (default: white)\n");
 	printf(" -r: reverse (counter-clockwise) rotation\n");
 	printf(" -s: print top 10 high-scores and exit\n");
+	printf(" -j: disable joystick even if detected\n");
 	printf(" -h: print usage information and exit\n\n");
 
 	printf("Controls:\n");
